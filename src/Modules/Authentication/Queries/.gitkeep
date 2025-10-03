@@ -1,0 +1,5 @@
+# This file ensures the Queries directory is tracked by git
+# Authentication query handlers will be placed here following the 3-file pattern:
+# - Query definition
+# - Handler implementation
+# - Validator

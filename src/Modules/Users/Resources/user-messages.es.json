@@ -1,0 +1,19 @@
+{
+  "EmailRequired": "El correo electrónico es requerido",
+  "EmailInvalid": "El correo electrónico debe ser una dirección válida",
+  "EmailMaxLength": "El correo electrónico no debe exceder 255 caracteres",
+  "PasswordRequired": "La contraseña es requerida",
+  "PasswordMinLength": "La contraseña debe tener al menos 8 caracteres",
+  "PasswordComplexity": "La contraseña debe contener al menos una letra minúscula, una mayúscula, un dígito y un carácter especial",
+  "FirstNameRequired": "El nombre es requerido",
+  "FirstNameMaxLength": "El nombre no debe exceder 100 caracteres",
+  "LastNameRequired": "El apellido es requerido",
+  "LastNameMaxLength": "El apellido no debe exceder 100 caracteres",
+  "UserIdRequired": "El ID de usuario es requerido",
+  "UserIdInvalid": "El ID de usuario debe ser un GUID válido",
+  "UserNotFound": "Usuario no encontrado",
+  "UserAlreadyExists": "Ya existe un usuario con este correo electrónico",
+  "UserCreationFailed": "Error al crear el usuario",
+  "UserUpdateFailed": "Error al actualizar el usuario",
+  "UserDeletionFailed": "Error al eliminar el usuario"
+}

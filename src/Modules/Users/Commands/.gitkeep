@@ -1,0 +1,5 @@
+# This file ensures the Commands directory is tracked by git
+# User command handlers will be placed here following the 3-file pattern:
+# - Command definition
+# - Handler implementation  
+# - Validator

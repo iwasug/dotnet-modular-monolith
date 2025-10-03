@@ -1,0 +1,2 @@
+# This file ensures the Database directory is tracked by git
+# Entity Framework configurations and DbContext will be placed here

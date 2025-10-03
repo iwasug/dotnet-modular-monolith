@@ -1,0 +1,16 @@
+{
+  "RefreshTokenRequired": "Le token de rafraîchissement est requis",
+  "RefreshTokenInvalid": "Le token de rafraîchissement est invalide ou expiré",
+  "InvalidCredentials": "Email ou mot de passe invalide",
+  "AccountLocked": "Le compte est verrouillé",
+  "AccountDisabled": "Le compte est désactivé",
+  "TokenExpired": "Le token a expiré",
+  "TokenInvalid": "Le token est invalide",
+  "RefreshTokenExpired": "Le token de rafraîchissement a expiré",
+  "RefreshTokenRevoked": "Le token de rafraîchissement a été révoqué",
+  "LoginFailed": "Échec de la connexion",
+  "LogoutFailed": "Échec de la déconnexion",
+  "AccessDenied": "Accès refusé",
+  "InsufficientPermissions": "Permissions insuffisantes pour effectuer cette action",
+  "UnauthorizedAccess": "Accès non autorisé"
+}

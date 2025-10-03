@@ -1,0 +1,19 @@
+{
+  "EmailRequired": "Email is required",
+  "EmailInvalid": "Email must be a valid email address",
+  "EmailMaxLength": "Email must not exceed 255 characters",
+  "PasswordRequired": "Password is required",
+  "PasswordMinLength": "Password must be at least 8 characters long",
+  "PasswordComplexity": "Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character",
+  "FirstNameRequired": "First name is required",
+  "FirstNameMaxLength": "First name must not exceed 100 characters",
+  "LastNameRequired": "Last name is required",
+  "LastNameMaxLength": "Last name must not exceed 100 characters",
+  "UserIdRequired": "User ID is required",
+  "UserIdInvalid": "User ID must be a valid GUID",
+  "UserNotFound": "User not found",
+  "UserAlreadyExists": "User with this email already exists",
+  "UserCreationFailed": "Failed to create user",
+  "UserUpdateFailed": "Failed to update user",
+  "UserDeletionFailed": "Failed to delete user"
+}

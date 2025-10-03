@@ -1,0 +1,16 @@
+{
+  "RefreshTokenRequired": "Refresh token is required",
+  "RefreshTokenInvalid": "Refresh token is invalid or expired",
+  "InvalidCredentials": "Invalid email or password",
+  "AccountLocked": "Account is locked",
+  "AccountDisabled": "Account is disabled",
+  "TokenExpired": "Token has expired",
+  "TokenInvalid": "Token is invalid",
+  "RefreshTokenExpired": "Refresh token has expired",
+  "RefreshTokenRevoked": "Refresh token has been revoked",
+  "LoginFailed": "Login failed",
+  "LogoutFailed": "Logout failed",
+  "AccessDenied": "Access denied",
+  "InsufficientPermissions": "Insufficient permissions to perform this action",
+  "UnauthorizedAccess": "Unauthorized access"
+}

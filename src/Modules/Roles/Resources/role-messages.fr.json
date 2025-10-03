@@ -1,0 +1,13 @@
+{
+  "RoleNameRequired": "Le nom du rôle est requis",
+  "RoleNameMaxLength": "Le nom du rôle ne doit pas dépasser 100 caractères",
+  "RoleIdRequired": "L'ID du rôle est requis",
+  "RoleIdInvalid": "L'ID du rôle doit être un GUID valide",
+  "PermissionsRequired": "Au moins une permission est requise",
+  "RoleNotFound": "Rôle non trouvé",
+  "RoleAlreadyExists": "Un rôle avec ce nom existe déjà",
+  "RoleCreationFailed": "Échec de la création du rôle",
+  "RoleUpdateFailed": "Échec de la mise à jour du rôle",
+  "RoleDeletionFailed": "Échec de la suppression du rôle",
+  "RoleAssignmentFailed": "Échec de l'attribution du rôle à l'utilisateur"
+}

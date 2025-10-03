@@ -1,0 +1,11 @@
+{
+  "ApiTitle": "API Manajemen Pengguna Perusahaan",
+  "ApiDescription": "API tingkat perusahaan yang komprehensif untuk manajemen pengguna dan peran yang dibangun dengan .NET 9.0 dan arsitektur Monolith Modular.",
+  "AuthenticationDescription": "Autentikasi token JWT Bearer. Format: Bearer <token>",
+  "ValidationError": "Validasi gagal",
+  "NotFoundError": "Sumber daya tidak ditemukan",
+  "UnauthorizedError": "Akses tidak diizinkan",
+  "ForbiddenError": "Akses dilarang",
+  "ConflictError": "Konflik sumber daya",
+  "InternalServerError": "Kesalahan server internal"
+}

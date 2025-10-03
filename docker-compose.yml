@@ -1,0 +1,150 @@
+# Docker Compose configuration for ModularMonolith API
+# Includes API, PostgreSQL, Redis, and optional monitoring services
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: modular-monolith-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ModularMonolith
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - modular-monolith-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ModularMonolith"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: modular-monolith-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - modular-monolith-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+  # ModularMonolith API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: modular-monolith-api
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=ModularMonolith;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres123};Pooling=true;MinPoolSize=5;MaxPoolSize=100;ConnectionIdleLifetime=300;ConnectionPruningInterval=10
+      - Cache__Provider=Redis
+      - Cache__Redis__ConnectionString=redis:6379,password=${REDIS_PASSWORD:-redis123}
+      - Cache__Redis__KeyPrefix=mm:
+      - Cache__Redis__Database=0
+      - Jwt__Key=${JWT_SECRET_KEY:-your-super-secret-jwt-key-that-is-at-least-32-characters-long-for-security}
+      - Jwt__Issuer=ModularMonolith
+      - Jwt__Audience=ModularMonolith
+      - Serilog__Seq__ServerUrl=http://seq:5341
+      - TZ=UTC
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - modular-monolith-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - api_logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Seq Logging (Optional - for development/staging)
+  seq:
+    image: datalust/seq:latest
+    container_name: modular-monolith-seq
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_PASSWORD:-admin123}
+    ports:
+      - "5341:80"
+    volumes:
+      - seq_data:/data
+    networks:
+      - modular-monolith-network
+    profiles:
+      - monitoring
+
+  # Nginx Reverse Proxy (Optional - for production)
+  nginx:
+    image: nginx:alpine
+    container_name: modular-monolith-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - api
+    networks:
+      - modular-monolith-network
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  seq_data:
+    driver: local
+  api_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+
+networks:
+  modular-monolith-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

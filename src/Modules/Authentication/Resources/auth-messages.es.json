@@ -1,0 +1,16 @@
+{
+  "RefreshTokenRequired": "El token de actualización es requerido",
+  "RefreshTokenInvalid": "El token de actualización es inválido o ha expirado",
+  "InvalidCredentials": "Correo electrónico o contraseña inválidos",
+  "AccountLocked": "La cuenta está bloqueada",
+  "AccountDisabled": "La cuenta está deshabilitada",
+  "TokenExpired": "El token ha expirado",
+  "TokenInvalid": "El token es inválido",
+  "RefreshTokenExpired": "El token de actualización ha expirado",
+  "RefreshTokenRevoked": "El token de actualización ha sido revocado",
+  "LoginFailed": "Error de inicio de sesión",
+  "LogoutFailed": "Error al cerrar sesión",
+  "AccessDenied": "Acceso denegado",
+  "InsufficientPermissions": "Permisos insuficientes para realizar esta acción",
+  "UnauthorizedAccess": "Acceso no autorizado"
+}

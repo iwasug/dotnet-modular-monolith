@@ -1,0 +1,13 @@
+{
+  "RoleNameRequired": "Role name is required",
+  "RoleNameMaxLength": "Role name must not exceed 100 characters",
+  "RoleIdRequired": "Role ID is required",
+  "RoleIdInvalid": "Role ID must be a valid GUID",
+  "PermissionsRequired": "At least one permission is required",
+  "RoleNotFound": "Role not found",
+  "RoleAlreadyExists": "Role with this name already exists",
+  "RoleCreationFailed": "Failed to create role",
+  "RoleUpdateFailed": "Failed to update role",
+  "RoleDeletionFailed": "Failed to delete role",
+  "RoleAssignmentFailed": "Failed to assign role to user"
+}

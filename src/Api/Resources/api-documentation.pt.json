@@ -1,0 +1,11 @@
+{
+  "ApiTitle": "API de Gerenciamento de Usuários Empresariais",
+  "ApiDescription": "Uma API abrangente de nível empresarial para gerenciamento de usuários e funções construída com .NET 9.0 e arquitetura Monólito Modular.",
+  "AuthenticationDescription": "Autenticação por token JWT Bearer. Formato: Bearer <token>",
+  "ValidationError": "Falha na validação",
+  "NotFoundError": "Recurso não encontrado",
+  "UnauthorizedError": "Acesso não autorizado",
+  "ForbiddenError": "Acesso proibido",
+  "ConflictError": "Conflito de recursos",
+  "InternalServerError": "Erro interno do servidor"
+}

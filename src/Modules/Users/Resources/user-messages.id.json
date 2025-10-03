@@ -1,0 +1,19 @@
+{
+  "EmailRequired": "Email wajib diisi",
+  "EmailInvalid": "Email harus berupa alamat email yang valid",
+  "EmailMaxLength": "Email tidak boleh melebihi 255 karakter",
+  "PasswordRequired": "Kata sandi wajib diisi",
+  "PasswordMinLength": "Kata sandi harus memiliki minimal 8 karakter",
+  "PasswordComplexity": "Kata sandi harus mengandung setidaknya satu huruf kecil, satu huruf besar, satu angka, dan satu karakter khusus",
+  "FirstNameRequired": "Nama depan wajib diisi",
+  "FirstNameMaxLength": "Nama depan tidak boleh melebihi 100 karakter",
+  "LastNameRequired": "Nama belakang wajib diisi",
+  "LastNameMaxLength": "Nama belakang tidak boleh melebihi 100 karakter",
+  "UserIdRequired": "ID pengguna wajib diisi",
+  "UserIdInvalid": "ID pengguna harus berupa GUID yang valid",
+  "UserNotFound": "Pengguna tidak ditemukan",
+  "UserAlreadyExists": "Pengguna dengan email ini sudah ada",
+  "UserCreationFailed": "Gagal membuat pengguna",
+  "UserUpdateFailed": "Gagal memperbarui pengguna",
+  "UserDeletionFailed": "Gagal menghapus pengguna"
+}

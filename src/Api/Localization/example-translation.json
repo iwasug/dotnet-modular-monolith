@@ -1,0 +1,38 @@
+{
+  "_comment": "Example JSON localization file structure",
+  "_instructions": "Copy this structure when creating new language files",
+  "_supportedLanguages": ["en-US", "es-ES", "fr-FR", "de-DE", "pt-BR", "it-IT", "ja-JP", "zh-CN", "id-ID"],
+  
+  "Common": {
+    "Required": "{0} is required",
+    "InvalidFormat": "{0} has an invalid format",
+    "MaxLength": "{0} must not exceed {1} characters"
+  },
+  
+  "User": {
+    "EmailRequired": "Email is required",
+    "EmailInvalid": "Email must be a valid email address",
+    "PasswordRequired": "Password is required",
+    "FirstNameRequired": "First name is required",
+    "LastNameRequired": "Last name is required"
+  },
+  
+  "Errors": {
+    "UserNotFound": "User not found",
+    "UserAlreadyExists": "User with this email already exists",
+    "InvalidCredentials": "Invalid email or password",
+    "AccessDenied": "Access denied"
+  },
+  
+  "API": {
+    "ApiTitle": "Enterprise User Management API",
+    "ApiDescription": "A comprehensive enterprise-grade API for user and role management",
+    "AuthenticationDescription": "JWT Bearer token authentication. Format: Bearer <token>"
+  },
+  
+  "_indonesianExample": {
+    "EmailRequired": "Email wajib diisi",
+    "UserNotFound": "Pengguna tidak ditemukan",
+    "ApiTitle": "API Manajemen Pengguna Perusahaan"
+  }
+}

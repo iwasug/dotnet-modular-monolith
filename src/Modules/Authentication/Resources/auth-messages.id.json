@@ -1,0 +1,16 @@
+{
+  "RefreshTokenRequired": "Token penyegaran wajib diisi",
+  "RefreshTokenInvalid": "Token penyegaran tidak valid atau telah kedaluwarsa",
+  "InvalidCredentials": "Email atau kata sandi tidak valid",
+  "AccountLocked": "Akun terkunci",
+  "AccountDisabled": "Akun dinonaktifkan",
+  "TokenExpired": "Token telah kedaluwarsa",
+  "TokenInvalid": "Token tidak valid",
+  "RefreshTokenExpired": "Token penyegaran telah kedaluwarsa",
+  "RefreshTokenRevoked": "Token penyegaran telah dicabut",
+  "LoginFailed": "Login gagal",
+  "LogoutFailed": "Logout gagal",
+  "AccessDenied": "Akses ditolak",
+  "InsufficientPermissions": "Izin tidak mencukupi untuk melakukan tindakan ini",
+  "UnauthorizedAccess": "Akses tidak diizinkan"
+}

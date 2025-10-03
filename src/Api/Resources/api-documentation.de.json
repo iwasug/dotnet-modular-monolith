@@ -1,0 +1,11 @@
+{
+  "ApiTitle": "Enterprise Benutzerverwaltungs-API",
+  "ApiDescription": "Eine umfassende Enterprise-Grade-API für Benutzer- und Rollenverwaltung, erstellt mit .NET 9.0 und modularer Monolith-Architektur.",
+  "AuthenticationDescription": "JWT Bearer Token-Authentifizierung. Format: Bearer <token>",
+  "ValidationError": "Validierung fehlgeschlagen",
+  "NotFoundError": "Ressource nicht gefunden",
+  "UnauthorizedError": "Unbefugter Zugriff",
+  "ForbiddenError": "Zugriff verweigert",
+  "ConflictError": "Ressourcenkonflikt",
+  "InternalServerError": "Interner Serverfehler"
+}

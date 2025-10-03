@@ -1,0 +1,13 @@
+{
+  "RoleNameRequired": "Nama peran wajib diisi",
+  "RoleNameMaxLength": "Nama peran tidak boleh melebihi 100 karakter",
+  "RoleIdRequired": "ID peran wajib diisi",
+  "RoleIdInvalid": "ID peran harus berupa GUID yang valid",
+  "PermissionsRequired": "Setidaknya satu izin diperlukan",
+  "RoleNotFound": "Peran tidak ditemukan",
+  "RoleAlreadyExists": "Peran dengan nama ini sudah ada",
+  "RoleCreationFailed": "Gagal membuat peran",
+  "RoleUpdateFailed": "Gagal memperbarui peran",
+  "RoleDeletionFailed": "Gagal menghapus peran",
+  "RoleAssignmentFailed": "Gagal menetapkan peran kepada pengguna"
+}
