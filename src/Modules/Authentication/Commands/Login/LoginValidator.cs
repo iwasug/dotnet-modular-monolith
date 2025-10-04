@@ -1,26 +1,27 @@
 using FluentValidation;
+using ModularMonolith.Authentication.Services;
 
 namespace ModularMonolith.Authentication.Commands.Login;
 
 /// <summary>
-/// Validator for LoginCommand following the 3-file pattern
+/// Validator for LoginCommand following the 3-file pattern with localized messages
 /// </summary>
 public class LoginValidator : AbstractValidator<LoginCommand>
 {
-    public LoginValidator()
+    public LoginValidator(IAuthLocalizationService authLocalizationService)
     {
         RuleFor(x => x.Email)
             .NotEmpty()
-            .WithMessage("Email is required")
+            .WithMessage(authLocalizationService.GetString("EmailRequired"))
             .EmailAddress()
-            .WithMessage("Email must be a valid email address")
+            .WithMessage(authLocalizationService.GetString("EmailInvalid"))
             .MaximumLength(255)
-            .WithMessage("Email must not exceed 255 characters");
+            .WithMessage(authLocalizationService.GetString("EmailMaxLength"));
             
         RuleFor(x => x.Password)
             .NotEmpty()
-            .WithMessage("Password is required")
+            .WithMessage(authLocalizationService.GetString("PasswordRequired"))
             .MinimumLength(1)
-            .WithMessage("Password cannot be empty");
+            .WithMessage(authLocalizationService.GetString("PasswordEmpty"));
     }
 }

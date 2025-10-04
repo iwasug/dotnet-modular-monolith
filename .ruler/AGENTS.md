@@ -4,7 +4,6 @@ Centralised AI agent instructions. Add coding guidelines, style guides, and proj
 
 Ruler concatenates all .md files in this directory (and subdirectories), starting with AGENTS.md (if present), then remaining files in sorted order.
 
-# ASP.NET Core 8 Project Rules
 
 - Use C# 12 language features where appropriate
 - Follow SOLID principles in class and interface design

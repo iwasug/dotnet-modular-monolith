@@ -2,6 +2,7 @@ using ModularMonolith.Shared.Common;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Roles.Domain;
 using ModularMonolith.Roles.Domain.ValueObjects;
+using ModularMonolith.Roles.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ModularMonolith.Roles.Commands.UpdateRole;
@@ -14,15 +15,18 @@ public sealed class UpdateRoleHandler : ICommandHandler<UpdateRoleCommand, Updat
     private readonly ILogger<UpdateRoleHandler> _logger;
     private readonly IRoleRepository _roleRepository;
     private readonly ITimeService _timeService;
+    private readonly IRoleLocalizationService _roleLocalizationService;
     
     public UpdateRoleHandler(
         ILogger<UpdateRoleHandler> logger,
         IRoleRepository roleRepository,
-        ITimeService timeService)
+        ITimeService timeService,
+        IRoleLocalizationService roleLocalizationService)
     {
         _logger = logger;
         _roleRepository = roleRepository;
         _timeService = timeService;
+        _roleLocalizationService = roleLocalizationService;
     }
     
     public async Task<Result<UpdateRoleResponse>> Handle(
@@ -48,7 +52,7 @@ public sealed class UpdateRoleHandler : ICommandHandler<UpdateRoleCommand, Updat
             {
                 _logger.LogWarning("Role with ID {RoleId} not found", command.RoleId);
                 return Result<UpdateRoleResponse>.Failure(
-                    Error.NotFound("ROLE_NOT_FOUND", "Role not found"));
+                    Error.NotFound("ROLE_NOT_FOUND", _roleLocalizationService.GetString("RoleNotFound")));
             }
 
             // Check if another role with the same name exists (excluding current role)
@@ -58,7 +62,7 @@ public sealed class UpdateRoleHandler : ICommandHandler<UpdateRoleCommand, Updat
             {
                 _logger.LogWarning("Another role with name {RoleName} already exists", command.Name);
                 return Result<UpdateRoleResponse>.Failure(
-                    Error.Conflict("ROLE_NAME_ALREADY_EXISTS", "Another role with this name already exists"));
+                    Error.Conflict("ROLE_NAME_ALREADY_EXISTS", _roleLocalizationService.GetString("RoleNameAlreadyExists")));
             }
 
             // Update role properties
@@ -93,7 +97,7 @@ public sealed class UpdateRoleHandler : ICommandHandler<UpdateRoleCommand, Updat
         {
             _logger.LogError(ex, "Error updating role with ID {RoleId}", command.RoleId);
             return Result<UpdateRoleResponse>.Failure(
-                Error.Internal("ROLE_UPDATE_FAILED", "Failed to update role"));
+                Error.Internal("ROLE_UPDATE_FAILED", _roleLocalizationService.GetString("RoleUpdateFailed")));
         }
     }
 }

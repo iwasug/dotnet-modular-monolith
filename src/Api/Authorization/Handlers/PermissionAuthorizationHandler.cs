@@ -37,7 +37,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
             return;
         }
 
-        using var activity = _logger.BeginScope(new Dictionary<string, object>
+        using IDisposable activity = _logger.BeginScope(new Dictionary<string, object>
         {
             ["Operation"] = "PermissionAuthorization",
             ["UserId"] = _userContext.CurrentUserId.Value,
@@ -47,7 +47,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
         try
         {
             // Get user's role IDs
-            var userRoleIds = _userContext.CurrentUserRoleIds;
+            IReadOnlyList<Guid> userRoleIds = _userContext.CurrentUserRoleIds;
             if (userRoleIds.Count == 0)
             {
                 _logger.LogDebug("User {UserId} has no roles assigned", _userContext.CurrentUserId.Value);
@@ -59,7 +59,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
                 requirement, _userContext.CurrentUserId.Value, string.Join(", ", userRoleIds));
 
             // Check if any of the user's roles have the required permission
-            var hasPermission = await CheckUserPermissionsAsync(userRoleIds, requirement);
+            bool hasPermission = await CheckUserPermissionsAsync(userRoleIds, requirement);
 
             if (hasPermission)
             {
@@ -87,11 +87,11 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
         PermissionRequirement requirement)
     {
         // Load all user roles with their permissions
-        var userRoles = new List<Role>();
+        List<Role> userRoles = new List<Role>();
         
-        foreach (var roleId in userRoleIds)
+        foreach (Guid roleId in userRoleIds)
         {
-            var role = await _roleRepository.GetByIdAsync(RoleId.From(roleId));
+            Role? role = await _roleRepository.GetByIdAsync(RoleId.From(roleId));
             if (role is not null && !role.IsDeleted)
             {
                 userRoles.Add(role);
@@ -99,11 +99,11 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
         }
 
         // Check if any role has the required permission
-        foreach (var role in userRoles)
+        foreach (Role role in userRoles)
         {
-            var permissions = role.GetPermissions();
+            IEnumerable<ModularMonolith.Shared.Domain.Permission> permissions = role.GetPermissions();
             
-            foreach (var permission in permissions)
+            foreach (ModularMonolith.Shared.Domain.Permission permission in permissions)
             {
                 if (requirement.Matches(permission.Resource, permission.Action, permission.Scope))
                 {

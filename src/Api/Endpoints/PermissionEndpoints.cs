@@ -20,7 +20,7 @@ internal static class PermissionEndpoints
             .WithTags("Permissions");
 
         // GET /api/permissions - Get all permissions
-        permissions.MapGet("/", async (
+        permissions.MapGet("/", (
             [FromServices] PermissionRegistry registry,
             CancellationToken cancellationToken) =>
         {
@@ -49,7 +49,7 @@ internal static class PermissionEndpoints
         .Produces(403);
 
         // GET /api/permissions/modules - Get permissions by module
-        permissions.MapGet("/modules", async (
+        permissions.MapGet("/modules", (
             [FromServices] PermissionRegistry registry,
             CancellationToken cancellationToken) =>
         {
@@ -82,7 +82,7 @@ internal static class PermissionEndpoints
         .Produces(403);
 
         // GET /api/permissions/resources - Get permissions by resource
-        permissions.MapGet("/resources", async (
+        permissions.MapGet("/resources", (
             [FromServices] PermissionRegistry registry,
             CancellationToken cancellationToken) =>
         {
@@ -114,7 +114,7 @@ internal static class PermissionEndpoints
         .Produces(403);
 
         // GET /api/permissions/statistics - Get permission statistics
-        permissions.MapGet("/statistics", async (
+        permissions.MapGet("/statistics", (
             [FromServices] PermissionRegistry registry,
             CancellationToken cancellationToken) =>
         {
@@ -141,7 +141,7 @@ internal static class PermissionEndpoints
         .Produces(403);
 
         // GET /api/permissions/search - Search permissions
-        permissions.MapGet("/search", async (
+        permissions.MapGet("/search", (
             [FromServices] PermissionRegistry registry,
             [FromQuery] string? resource = null,
             [FromQuery] string? action = null,
@@ -195,7 +195,7 @@ internal static class PermissionEndpoints
         .Produces(403);
 
         // GET /api/permissions/{resource}/{action} - Find specific permission
-        permissions.MapGet("/{resource}/{action}", async (
+        permissions.MapGet("/{resource}/{action}", (
             [FromRoute] string resource,
             [FromRoute] string action,
             [FromServices] PermissionRegistry registry,

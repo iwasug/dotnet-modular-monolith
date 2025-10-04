@@ -1,0 +1,16 @@
+{
+  "RefreshTokenRequired": "Il token di aggiornamento è obbligatorio",
+  "RefreshTokenInvalid": "Il token di aggiornamento non è valido o è scaduto",
+  "InvalidCredentials": "Email o password non validi",
+  "AccountLocked": "Account bloccato",
+  "AccountDisabled": "Account disabilitato",
+  "TokenExpired": "Token scaduto",
+  "TokenInvalid": "Token non valido",
+  "RefreshTokenExpired": "Token di aggiornamento scaduto",
+  "RefreshTokenRevoked": "Token di aggiornamento revocato",
+  "LoginFailed": "Accesso fallito",
+  "LogoutFailed": "Disconnessione fallita",
+  "AccessDenied": "Accesso negato",
+  "InsufficientPermissions": "Autorizzazioni insufficienti per eseguire questa azione",
+  "UnauthorizedAccess": "Accesso non autorizzato"
+}

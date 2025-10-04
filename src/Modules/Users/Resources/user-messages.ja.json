@@ -1,0 +1,21 @@
+{
+  "EmailRequired": "メールアドレスは必須です",
+  "EmailInvalid": "メールアドレスは有効なメールアドレスである必要があります",
+  "EmailMaxLength": "メールアドレスは255文字を超えてはいけません",
+  "PasswordRequired": "パスワードは必須です",
+  "PasswordMinLength": "パスワードは8文字以上である必要があります",
+  "PasswordComplexity": "パスワードには、小文字、大文字、数字、特殊文字が少なくとも1つずつ含まれている必要があります",
+  "FirstNameRequired": "名は必須です",
+  "FirstNameMaxLength": "名は100文字を超えてはいけません",
+  "FirstNamePattern": "名には文字、スペース、ハイフン、アポストロフィのみを含めることができます",
+  "LastNameRequired": "姓は必須です",
+  "LastNameMaxLength": "姓は100文字を超えてはいけません",
+  "LastNamePattern": "姓には文字、スペース、ハイフン、アポストロフィのみを含めることができます",
+  "UserIdRequired": "ユーザーIDは必須です",
+  "UserIdInvalid": "ユーザーIDは有効なGUIDである必要があります",
+  "UserNotFound": "ユーザーが見つかりません",
+  "UserAlreadyExists": "このメールアドレスのユーザーは既に存在します",
+  "UserCreationFailed": "ユーザーの作成に失敗しました",
+  "UserUpdateFailed": "ユーザーの更新に失敗しました",
+  "UserDeletionFailed": "ユーザーの削除に失敗しました"
+}

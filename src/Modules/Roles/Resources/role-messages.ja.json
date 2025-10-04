@@ -1,0 +1,13 @@
+{
+  "RoleNameRequired": "ロール名は必須です",
+  "RoleNameMaxLength": "ロール名は100文字を超えてはいけません",
+  "RoleIdRequired": "ロールIDは必須です",
+  "RoleIdInvalid": "ロールIDは有効なGUIDである必要があります",
+  "PermissionsRequired": "少なくとも1つの権限が必要です",
+  "RoleNotFound": "ロールが見つかりません",
+  "RoleAlreadyExists": "この名前のロールは既に存在します",
+  "RoleCreationFailed": "ロールの作成に失敗しました",
+  "RoleUpdateFailed": "ロールの更新に失敗しました",
+  "RoleDeletionFailed": "ロールの削除に失敗しました",
+  "RoleAssignmentFailed": "ユーザーへのロールの割り当てに失敗しました"
+}

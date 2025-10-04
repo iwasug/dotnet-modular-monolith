@@ -1,18 +1,19 @@
 using FluentValidation;
+using ModularMonolith.Authentication.Services;
 
 namespace ModularMonolith.Authentication.Commands.Logout;
 
 /// <summary>
-/// Validator for LogoutCommand following the 3-file pattern
+/// Validator for LogoutCommand following the 3-file pattern with localized messages
 /// </summary>
 public class LogoutValidator : AbstractValidator<LogoutCommand>
 {
-    public LogoutValidator()
+    public LogoutValidator(IAuthLocalizationService authLocalizationService)
     {
         RuleFor(x => x.RefreshToken)
             .NotEmpty()
-            .WithMessage("Refresh token is required")
+            .WithMessage(authLocalizationService.GetString("RefreshTokenRequired"))
             .MinimumLength(10)
-            .WithMessage("Refresh token must be at least 10 characters long");
+            .WithMessage(authLocalizationService.GetString("RefreshTokenMinLength"));
     }
 }

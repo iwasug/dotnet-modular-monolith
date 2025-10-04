@@ -1,0 +1,16 @@
+{
+  "RefreshTokenRequired": "リフレッシュトークンは必須です",
+  "RefreshTokenInvalid": "リフレッシュトークンが無効または期限切れです",
+  "InvalidCredentials": "メールアドレスまたはパスワードが無効です",
+  "AccountLocked": "アカウントがロックされています",
+  "AccountDisabled": "アカウントが無効になっています",
+  "TokenExpired": "トークンが期限切れです",
+  "TokenInvalid": "トークンが無効です",
+  "RefreshTokenExpired": "リフレッシュトークンが期限切れです",
+  "RefreshTokenRevoked": "リフレッシュトークンが取り消されました",
+  "LoginFailed": "ログインに失敗しました",
+  "LogoutFailed": "ログアウトに失敗しました",
+  "AccessDenied": "アクセスが拒否されました",
+  "InsufficientPermissions": "このアクションを実行するための権限が不足しています",
+  "UnauthorizedAccess": "不正なアクセス"
+}

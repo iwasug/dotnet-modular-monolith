@@ -1,40 +1,41 @@
 using FluentValidation;
+using ModularMonolith.Roles.Services;
 
 namespace ModularMonolith.Roles.Commands.UpdateRole;
 
 /// <summary>
-/// Validator for UpdateRoleCommand following the 3-file pattern
+/// Validator for UpdateRoleCommand following the 3-file pattern with localized messages
 /// </summary>
 public sealed class UpdateRoleValidator : AbstractValidator<UpdateRoleCommand>
 {
-    public UpdateRoleValidator()
+    public UpdateRoleValidator(IRoleLocalizationService roleLocalizationService)
     {
         RuleFor(x => x.RoleId)
             .NotEmpty()
-            .WithMessage("Role ID is required")
+            .WithMessage(roleLocalizationService.GetString("RoleIdRequired"))
             .NotEqual(Guid.Empty)
-            .WithMessage("Role ID must be a valid GUID");
+            .WithMessage(roleLocalizationService.GetString("RoleIdInvalid"));
 
         RuleFor(x => x.Name)
             .NotEmpty()
-            .WithMessage("Role name is required")
+            .WithMessage(roleLocalizationService.GetString("RoleNameRequired"))
             .MaximumLength(100)
-            .WithMessage("Role name must not exceed 100 characters")
+            .WithMessage(roleLocalizationService.GetString("RoleNameMaxLength"))
             .Matches(@"^[a-zA-Z0-9\s\-_]+$")
-            .WithMessage("Role name can only contain letters, numbers, spaces, hyphens, and underscores");
+            .WithMessage(roleLocalizationService.GetString("RoleNamePattern"));
             
         RuleFor(x => x.Description)
             .NotEmpty()
-            .WithMessage("Description is required")
+            .WithMessage(roleLocalizationService.GetString("DescriptionRequired"))
             .MaximumLength(500)
-            .WithMessage("Description must not exceed 500 characters");
+            .WithMessage(roleLocalizationService.GetString("DescriptionMaxLength"));
 
         RuleFor(x => x.Permissions)
             .NotNull()
-            .WithMessage("Permissions list cannot be null");
+            .WithMessage(roleLocalizationService.GetString("PermissionsListNull"));
 
         RuleForEach(x => x.Permissions)
-            .SetValidator(new PermissionDtoValidator())
+            .SetValidator(new PermissionDtoValidator(roleLocalizationService))
             .When(x => x.Permissions is not null);
     }
 }
@@ -44,30 +45,30 @@ public sealed class UpdateRoleValidator : AbstractValidator<UpdateRoleCommand>
 /// </summary>
 public sealed class PermissionDtoValidator : AbstractValidator<PermissionDto>
 {
-    public PermissionDtoValidator()
+    public PermissionDtoValidator(IRoleLocalizationService roleLocalizationService)
     {
         RuleFor(x => x.Resource)
             .NotEmpty()
-            .WithMessage("Resource is required")
+            .WithMessage(roleLocalizationService.GetString("ResourceRequired"))
             .MaximumLength(100)
-            .WithMessage("Resource must not exceed 100 characters")
+            .WithMessage(roleLocalizationService.GetString("ResourceMaxLength"))
             .Matches(@"^[a-zA-Z0-9\-_]+$")
-            .WithMessage("Resource can only contain letters, numbers, hyphens, and underscores");
+            .WithMessage(roleLocalizationService.GetString("ResourcePattern"));
 
         RuleFor(x => x.Action)
             .NotEmpty()
-            .WithMessage("Action is required")
+            .WithMessage(roleLocalizationService.GetString("ActionRequired"))
             .MaximumLength(50)
-            .WithMessage("Action must not exceed 50 characters")
+            .WithMessage(roleLocalizationService.GetString("ActionMaxLength"))
             .Matches(@"^[a-zA-Z0-9\-_]+$")
-            .WithMessage("Action can only contain letters, numbers, hyphens, and underscores");
+            .WithMessage(roleLocalizationService.GetString("ActionPattern"));
 
         RuleFor(x => x.Scope)
             .NotEmpty()
-            .WithMessage("Scope is required")
+            .WithMessage(roleLocalizationService.GetString("ScopeRequired"))
             .MaximumLength(50)
-            .WithMessage("Scope must not exceed 50 characters")
+            .WithMessage(roleLocalizationService.GetString("ScopeMaxLength"))
             .Matches(@"^[a-zA-Z0-9\-_*]+$")
-            .WithMessage("Scope can only contain letters, numbers, hyphens, underscores, and asterisks");
+            .WithMessage(roleLocalizationService.GetString("ScopePattern"));
     }
 }

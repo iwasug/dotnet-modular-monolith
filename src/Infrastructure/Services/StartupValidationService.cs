@@ -37,7 +37,7 @@ public sealed class StartupValidationService : IHostedService
             using var scope = _serviceProvider.CreateScope();
             
             // Validate configuration
-            await ValidateConfiguration(scope.ServiceProvider);
+            ValidateConfiguration(scope.ServiceProvider);
             
             // Validate database connectivity
             await ValidateDatabase(scope.ServiceProvider, cancellationToken);
@@ -67,7 +67,7 @@ public sealed class StartupValidationService : IHostedService
         return Task.CompletedTask;
     }
 
-    private async Task ValidateConfiguration(IServiceProvider serviceProvider)
+    private void ValidateConfiguration(IServiceProvider serviceProvider)
     {
         _logger.LogDebug("Validating configuration");
         

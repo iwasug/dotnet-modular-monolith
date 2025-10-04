@@ -32,7 +32,7 @@ public class CreateUserValidator : AbstractValidator<CreateUserCommand>
             .MaximumLength(100)
             .WithMessage(userLocalizationService.GetString("FirstNameMaxLength"))
             .Matches(@"^[a-zA-Z\s'-]+$")
-            .WithMessage("First name can only contain letters, spaces, hyphens, and apostrophes");
+            .WithMessage(userLocalizationService.GetString("FirstNamePattern"));
             
         RuleFor(x => x.LastName)
             .NotEmpty()
@@ -40,6 +40,6 @@ public class CreateUserValidator : AbstractValidator<CreateUserCommand>
             .MaximumLength(100)
             .WithMessage(userLocalizationService.GetString("LastNameMaxLength"))
             .Matches(@"^[a-zA-Z\s'-]+$")
-            .WithMessage("Last name can only contain letters, spaces, hyphens, and apostrophes");
+            .WithMessage(userLocalizationService.GetString("LastNamePattern"));
     }
 }

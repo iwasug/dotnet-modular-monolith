@@ -1,0 +1,16 @@
+{
+  "RefreshTokenRequired": "刷新令牌为必填项",
+  "RefreshTokenInvalid": "刷新令牌无效或已过期",
+  "InvalidCredentials": "电子邮件或密码无效",
+  "AccountLocked": "账户已锁定",
+  "AccountDisabled": "账户已禁用",
+  "TokenExpired": "令牌已过期",
+  "TokenInvalid": "令牌无效",
+  "RefreshTokenExpired": "刷新令牌已过期",
+  "RefreshTokenRevoked": "刷新令牌已被撤销",
+  "LoginFailed": "登录失败",
+  "LogoutFailed": "注销失败",
+  "AccessDenied": "访问被拒绝",
+  "InsufficientPermissions": "执行此操作的权限不足",
+  "UnauthorizedAccess": "未经授权的访问"
+}

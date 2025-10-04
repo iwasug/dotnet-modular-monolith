@@ -1,18 +1,19 @@
 using FluentValidation;
+using ModularMonolith.Roles.Services;
 
 namespace ModularMonolith.Roles.Queries.GetRole;
 
 /// <summary>
-/// Validator for GetRoleQuery following the 3-file pattern
+/// Validator for GetRoleQuery following the 3-file pattern with localized messages
 /// </summary>
 public sealed class GetRoleValidator : AbstractValidator<GetRoleQuery>
 {
-    public GetRoleValidator()
+    public GetRoleValidator(IRoleLocalizationService roleLocalizationService)
     {
         RuleFor(x => x.RoleId)
             .NotEmpty()
-            .WithMessage("Role ID is required")
+            .WithMessage(roleLocalizationService.GetString("RoleIdRequired"))
             .NotEqual(Guid.Empty)
-            .WithMessage("Role ID must be a valid GUID");
+            .WithMessage(roleLocalizationService.GetString("RoleIdInvalid"));
     }
 }

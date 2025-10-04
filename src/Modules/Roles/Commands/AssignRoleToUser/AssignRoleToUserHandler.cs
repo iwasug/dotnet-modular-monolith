@@ -2,6 +2,7 @@ using ModularMonolith.Shared.Common;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Roles.Domain;
 using ModularMonolith.Roles.Domain.ValueObjects;
+using ModularMonolith.Roles.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ModularMonolith.Roles.Commands.AssignRoleToUser;
@@ -14,15 +15,18 @@ public sealed class AssignRoleToUserHandler : ICommandHandler<AssignRoleToUserCo
     private readonly ILogger<AssignRoleToUserHandler> _logger;
     private readonly IRoleRepository _roleRepository;
     private readonly ITimeService _timeService;
+    private readonly IRoleLocalizationService _roleLocalizationService;
     
     public AssignRoleToUserHandler(
         ILogger<AssignRoleToUserHandler> logger,
         IRoleRepository roleRepository,
-        ITimeService timeService)
+        ITimeService timeService,
+        IRoleLocalizationService roleLocalizationService)
     {
         _logger = logger;
         _roleRepository = roleRepository;
         _timeService = timeService;
+        _roleLocalizationService = roleLocalizationService;
     }
     
     public async Task<Result<AssignRoleToUserResponse>> Handle(
@@ -48,7 +52,7 @@ public sealed class AssignRoleToUserHandler : ICommandHandler<AssignRoleToUserCo
             {
                 _logger.LogWarning("Role with ID {RoleId} not found", command.RoleId);
                 return Result<AssignRoleToUserResponse>.Failure(
-                    Error.NotFound("ROLE_NOT_FOUND", "Role not found"));
+                    Error.NotFound("ROLE_NOT_FOUND", _roleLocalizationService.GetString("RoleNotFound")));
             }
 
             // TODO: Validate user exists through inter-module communication
@@ -72,7 +76,7 @@ public sealed class AssignRoleToUserHandler : ICommandHandler<AssignRoleToUserCo
         {
             _logger.LogError(ex, "Error assigning role {RoleId} to user {UserId}", command.RoleId, command.UserId);
             return Result<AssignRoleToUserResponse>.Failure(
-                Error.Internal("ROLE_ASSIGNMENT_FAILED", "Failed to assign role to user"));
+                Error.Internal("ROLE_ASSIGNMENT_FAILED", _roleLocalizationService.GetString("RoleAssignmentFailed")));
         }
     }
 }

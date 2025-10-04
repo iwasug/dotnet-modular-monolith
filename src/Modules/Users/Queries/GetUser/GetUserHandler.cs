@@ -29,7 +29,7 @@ public class GetUserHandler : IQueryHandler<GetUserQuery, GetUserResponse>
         GetUserQuery query, 
         CancellationToken cancellationToken = default)
     {
-        using var activity = _logger.BeginScope(new Dictionary<string, object>
+        using IDisposable activity = _logger.BeginScope(new Dictionary<string, object>
         {
             ["Query"] = nameof(GetUserQuery),
             ["UserId"] = query.UserId,
@@ -41,8 +41,8 @@ public class GetUserHandler : IQueryHandler<GetUserQuery, GetUserResponse>
         try
         {
             // Get user from repository
-            var user = await _userRepository.GetByIdAsync(query.UserId, cancellationToken);
-            if (user == null)
+            User? user = await _userRepository.GetByIdAsync(query.UserId, cancellationToken);
+            if (user is null)
             {
                 _logger.LogWarning("User with ID {UserId} not found", query.UserId);
                 return Result<GetUserResponse>.Failure(
@@ -50,7 +50,7 @@ public class GetUserHandler : IQueryHandler<GetUserQuery, GetUserResponse>
             }
 
             // Map to response
-            var response = new GetUserResponse(
+            GetUserResponse response = new GetUserResponse(
                 user.Id,
                 user.Email.Value,
                 user.Profile.FirstName,

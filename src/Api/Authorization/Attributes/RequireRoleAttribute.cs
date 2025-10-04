@@ -22,7 +22,7 @@ internal sealed class RequireRoleAttribute : AuthorizeAttribute
             throw new ArgumentException("At least one role must be specified", nameof(requiredRoles));
         }
 
-        var roles = requiredRoles.Where(r => !string.IsNullOrWhiteSpace(r))
+        List<string> roles = requiredRoles.Where(r => !string.IsNullOrWhiteSpace(r))
                                 .Select(r => r.Trim().ToLowerInvariant())
                                 .Distinct()
                                 .ToList();
@@ -36,8 +36,8 @@ internal sealed class RequireRoleAttribute : AuthorizeAttribute
         RequireAllRoles = requireAllRoles;
 
         // Set the policy name to be used by the authorization system
-        var conjunction = RequireAllRoles ? "All" : "Any";
-        var roleList = string.Join(",", RequiredRoles);
+        string conjunction = RequireAllRoles ? "All" : "Any";
+        string roleList = string.Join(",", RequiredRoles);
         Policy = $"Role:{conjunction}:{roleList}";
     }
 
@@ -59,7 +59,7 @@ internal sealed class RequireRoleAttribute : AuthorizeAttribute
 
     public override string ToString()
     {
-        var conjunction = RequireAllRoles ? " AND " : " OR ";
+        string conjunction = RequireAllRoles ? " AND " : " OR ";
         return string.Join(conjunction, RequiredRoles);
     }
 }

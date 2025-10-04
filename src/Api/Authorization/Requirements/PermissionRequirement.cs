@@ -43,7 +43,7 @@ internal sealed class PermissionRequirement : IAuthorizationRequirement
             throw new ArgumentException("Permission string cannot be null or empty", nameof(permissionString));
         }
 
-        var parts = permissionString.Split(':', StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = permissionString.Split(':', StringSplitOptions.RemoveEmptyEntries);
         return parts.Length switch
         {
             2 => new PermissionRequirement(parts[0], parts[1]),

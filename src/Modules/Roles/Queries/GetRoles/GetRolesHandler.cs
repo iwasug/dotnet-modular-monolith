@@ -2,6 +2,7 @@ using ModularMonolith.Shared.Common;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Roles.Domain;
 using ModularMonolith.Roles.Domain.ValueObjects;
+using ModularMonolith.Roles.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ModularMonolith.Roles.Queries.GetRoles;
@@ -13,13 +14,16 @@ public sealed class GetRolesHandler : IQueryHandler<GetRolesQuery, GetRolesRespo
 {
     private readonly ILogger<GetRolesHandler> _logger;
     private readonly IRoleRepository _roleRepository;
+    private readonly IRoleLocalizationService _roleLocalizationService;
     
     public GetRolesHandler(
         ILogger<GetRolesHandler> logger,
-        IRoleRepository roleRepository)
+        IRoleRepository roleRepository,
+        IRoleLocalizationService roleLocalizationService)
     {
         _logger = logger;
         _roleRepository = roleRepository;
+        _roleLocalizationService = roleLocalizationService;
     }
     
     public async Task<Result<GetRolesResponse>> Handle(
@@ -104,7 +108,7 @@ public sealed class GetRolesHandler : IQueryHandler<GetRolesQuery, GetRolesRespo
         {
             _logger.LogError(ex, "Error retrieving roles with filters");
             return Result<GetRolesResponse>.Failure(
-                Error.Internal("ROLES_RETRIEVAL_FAILED", "Failed to retrieve roles"));
+                Error.Internal("ROLES_RETRIEVAL_FAILED", _roleLocalizationService.GetString("RolesRetrievalFailed")));
         }
     }
 }

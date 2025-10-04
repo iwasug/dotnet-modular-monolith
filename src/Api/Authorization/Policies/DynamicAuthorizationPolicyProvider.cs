@@ -49,17 +49,17 @@ internal sealed class DynamicAuthorizationPolicyProvider : IAuthorizationPolicyP
         try
         {
             // Extract permission from policy name: "Permission:resource:action:scope"
-            var parts = policyName.Split(':', StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = policyName.Split(':', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length < 3 || parts.Length > 4)
             {
                 return null;
             }
 
-            var resource = parts[1];
-            var action = parts[2];
-            var scope = parts.Length == 4 ? parts[3] : "*";
+            string resource = parts[1];
+            string action = parts[2];
+            string scope = parts.Length == 4 ? parts[3] : "*";
 
-            var requirement = new PermissionRequirement(resource, action, scope);
+            PermissionRequirement requirement = new PermissionRequirement(resource, action, scope);
             
             return new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
@@ -77,16 +77,16 @@ internal sealed class DynamicAuthorizationPolicyProvider : IAuthorizationPolicyP
         try
         {
             // Extract role information from policy name: "Role:Any:role1,role2" or "Role:All:role1,role2"
-            var parts = policyName.Split(':', StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = policyName.Split(':', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length != 3)
             {
                 return null;
             }
 
-            var conjunction = parts[1]; // "Any" or "All"
-            var roleList = parts[2]; // "role1,role2"
+            string conjunction = parts[1]; // "Any" or "All"
+            string roleList = parts[2]; // "role1,role2"
             
-            var roles = roleList.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            string[] roles = roleList.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                .Select(r => r.Trim())
                                .Where(r => !string.IsNullOrEmpty(r))
                                .ToArray();
@@ -96,8 +96,8 @@ internal sealed class DynamicAuthorizationPolicyProvider : IAuthorizationPolicyP
                 return null;
             }
 
-            var requireAllRoles = string.Equals(conjunction, "All", StringComparison.OrdinalIgnoreCase);
-            var requirement = new RoleRequirement(roles, requireAllRoles);
+            bool requireAllRoles = string.Equals(conjunction, "All", StringComparison.OrdinalIgnoreCase);
+            RoleRequirement requirement = new RoleRequirement(roles, requireAllRoles);
 
             return new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()

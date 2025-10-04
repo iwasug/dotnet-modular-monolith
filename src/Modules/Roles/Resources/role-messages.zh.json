@@ -1,0 +1,13 @@
+{
+  "RoleNameRequired": "角色名称为必填项",
+  "RoleNameMaxLength": "角色名称不得超过100个字符",
+  "RoleIdRequired": "角色ID为必填项",
+  "RoleIdInvalid": "角色ID必须是有效的GUID",
+  "PermissionsRequired": "至少需要一个权限",
+  "RoleNotFound": "找不到角色",
+  "RoleAlreadyExists": "此名称的角色已存在",
+  "RoleCreationFailed": "创建角色失败",
+  "RoleUpdateFailed": "更新角色失败",
+  "RoleDeletionFailed": "删除角色失败",
+  "RoleAssignmentFailed": "为用户分配角色失败"
+}

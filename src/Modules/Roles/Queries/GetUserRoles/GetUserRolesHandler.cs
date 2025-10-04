@@ -2,6 +2,7 @@ using ModularMonolith.Shared.Common;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Roles.Domain;
 using ModularMonolith.Roles.Domain.ValueObjects;
+using ModularMonolith.Roles.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ModularMonolith.Roles.Queries.GetUserRoles;
@@ -13,16 +14,19 @@ public sealed class GetUserRolesHandler : IQueryHandler<GetUserRolesQuery, GetUs
 {
     private readonly ILogger<GetUserRolesHandler> _logger;
     private readonly IRoleRepository _roleRepository;
+    private readonly IRoleLocalizationService _roleLocalizationService;
     
     public GetUserRolesHandler(
         ILogger<GetUserRolesHandler> logger,
-        IRoleRepository roleRepository)
+        IRoleRepository roleRepository,
+        IRoleLocalizationService roleLocalizationService)
     {
         _logger = logger;
         _roleRepository = roleRepository;
+        _roleLocalizationService = roleLocalizationService;
     }
     
-    public async Task<Result<GetUserRolesResponse>> Handle(
+    public Task<Result<GetUserRolesResponse>> Handle(
         GetUserRolesQuery query, 
         CancellationToken cancellationToken = default)
     {
@@ -42,20 +46,20 @@ public sealed class GetUserRolesHandler : IQueryHandler<GetUserRolesQuery, GetUs
             
             // For now, return empty roles
             _logger.LogInformation("User {UserId} has no roles assigned (inter-module communication not implemented)", query.UserId);
-            var response = new GetUserRolesResponse(
+            GetUserRolesResponse response = new GetUserRolesResponse(
                 query.UserId,
                 new List<UserRoleDto>(),
                 new List<PermissionDto>()
             );
             
             _logger.LogInformation("Retrieved 0 roles for user {UserId}", query.UserId);
-            return Result<GetUserRolesResponse>.Success(response);
+            return Task.FromResult(Result<GetUserRolesResponse>.Success(response));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving roles for user with ID {UserId}", query.UserId);
-            return Result<GetUserRolesResponse>.Failure(
-                Error.Internal("USER_ROLES_RETRIEVAL_FAILED", "Failed to retrieve user roles"));
+            return Task.FromResult(Result<GetUserRolesResponse>.Failure(
+                Error.Internal("USER_ROLES_RETRIEVAL_FAILED", _roleLocalizationService.GetString("UserRolesRetrievalFailed"))));
         }
     }
 }

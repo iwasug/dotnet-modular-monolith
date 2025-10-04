@@ -1,0 +1,16 @@
+{
+  "RefreshTokenRequired": "Aktualisierungstoken ist erforderlich",
+  "RefreshTokenInvalid": "Aktualisierungstoken ist ungültig oder abgelaufen",
+  "InvalidCredentials": "Ungültige E-Mail oder Passwort",
+  "AccountLocked": "Konto ist gesperrt",
+  "AccountDisabled": "Konto ist deaktiviert",
+  "TokenExpired": "Token ist abgelaufen",
+  "TokenInvalid": "Token ist ungültig",
+  "RefreshTokenExpired": "Aktualisierungstoken ist abgelaufen",
+  "RefreshTokenRevoked": "Aktualisierungstoken wurde widerrufen",
+  "LoginFailed": "Anmeldung fehlgeschlagen",
+  "LogoutFailed": "Abmeldung fehlgeschlagen",
+  "AccessDenied": "Zugriff verweigert",
+  "InsufficientPermissions": "Unzureichende Berechtigungen zum Ausführen dieser Aktion",
+  "UnauthorizedAccess": "Unbefugter Zugriff"
+}

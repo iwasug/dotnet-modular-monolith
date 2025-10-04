@@ -17,7 +17,7 @@ internal sealed class RoleRequirement : IAuthorizationRequirement
             throw new ArgumentNullException(nameof(requiredRoles));
         }
 
-        var roles = requiredRoles.Where(r => !string.IsNullOrWhiteSpace(r))
+        List<string> roles = requiredRoles.Where(r => !string.IsNullOrWhiteSpace(r))
                                 .Select(r => r.Trim().ToLowerInvariant())
                                 .Distinct()
                                 .ToList();
@@ -57,7 +57,7 @@ internal sealed class RoleRequirement : IAuthorizationRequirement
 
     public override string ToString()
     {
-        var conjunction = RequireAllRoles ? " AND " : " OR ";
+        string conjunction = RequireAllRoles ? " AND " : " OR ";
         return string.Join(conjunction, RequiredRoles);
     }
 }

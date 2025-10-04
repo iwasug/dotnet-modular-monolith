@@ -37,7 +37,7 @@ internal sealed class RoleAuthorizationHandler : AuthorizationHandler<RoleRequir
             return;
         }
 
-        using var activity = _logger.BeginScope(new Dictionary<string, object>
+        using IDisposable activity = _logger.BeginScope(new Dictionary<string, object>
         {
             ["Operation"] = "RoleAuthorization",
             ["UserId"] = _userContext.CurrentUserId.Value,
@@ -48,7 +48,7 @@ internal sealed class RoleAuthorizationHandler : AuthorizationHandler<RoleRequir
         try
         {
             // Get user's role IDs
-            var userRoleIds = _userContext.CurrentUserRoleIds;
+            IReadOnlyList<Guid> userRoleIds = _userContext.CurrentUserRoleIds;
             if (userRoleIds.Count == 0)
             {
                 _logger.LogDebug("User {UserId} has no roles assigned", _userContext.CurrentUserId.Value);
@@ -61,10 +61,10 @@ internal sealed class RoleAuthorizationHandler : AuthorizationHandler<RoleRequir
                 string.Join(", ", userRoleIds));
 
             // Get user's role names
-            var userRoleNames = await GetUserRoleNamesAsync(userRoleIds);
+            HashSet<string> userRoleNames = await GetUserRoleNamesAsync(userRoleIds);
 
             // Check role requirements
-            var hasRequiredRoles = requirement.RequireAllRoles
+            bool hasRequiredRoles = requirement.RequireAllRoles
                 ? requirement.RequiredRoles.All(requiredRole => userRoleNames.Contains(requiredRole))
                 : requirement.RequiredRoles.Any(requiredRole => userRoleNames.Contains(requiredRole));
 
@@ -91,11 +91,11 @@ internal sealed class RoleAuthorizationHandler : AuthorizationHandler<RoleRequir
 
     private async Task<HashSet<string>> GetUserRoleNamesAsync(IReadOnlyList<Guid> userRoleIds)
     {
-        var roleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> roleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var roleId in userRoleIds)
+        foreach (Guid roleId in userRoleIds)
         {
-            var role = await _roleRepository.GetByIdAsync(RoleId.From(roleId));
+            Role? role = await _roleRepository.GetByIdAsync(RoleId.From(roleId));
             if (role is not null && !role.IsDeleted)
             {
                 roleNames.Add(role.Name.Value.ToLowerInvariant());

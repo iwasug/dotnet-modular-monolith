@@ -23,7 +23,7 @@ internal sealed class JwtAuthenticationMiddleware
     {
         try
         {
-            await AuthenticateAsync(context, tokenService);
+            AuthenticateRequest(context, tokenService);
         }
         catch (Exception ex)
         {
@@ -33,7 +33,7 @@ internal sealed class JwtAuthenticationMiddleware
         await _next(context);
     }
 
-    private async Task AuthenticateAsync(HttpContext context, ITokenService tokenService)
+    private void AuthenticateRequest(HttpContext context, ITokenService tokenService)
     {
         var token = ExtractTokenFromHeader(context);
         if (string.IsNullOrEmpty(token))

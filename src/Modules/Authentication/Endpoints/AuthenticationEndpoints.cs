@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ModularMonolith.Shared.Common;
 using ModularMonolith.Shared.Extensions;
 using ModularMonolith.Shared.Interfaces;
@@ -156,20 +157,20 @@ internal static class AuthenticationEndpoints
         .Produces(500);
 
         // GET /api/auth/me - Get current user info (requires authentication)
-        auth.MapGet("/me", async (
+        auth.MapGet("/me", (
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            var user = context.User;
+            ClaimsPrincipal user = context.User;
             if (!user.Identity?.IsAuthenticated == true)
             {
                 return Results.Unauthorized();
             }
 
             // Extract user information from claims
-            var userId = user.FindFirst("sub")?.Value ?? user.FindFirst("userId")?.Value;
-            var email = user.FindFirst("email")?.Value ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
-            var name = user.FindFirst("name")?.Value ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value;
+            string? userId = user.FindFirst("sub")?.Value ?? user.FindFirst("userId")?.Value;
+            string? email = user.FindFirst("email")?.Value ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value;
+            string? name = user.FindFirst("name")?.Value ?? user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value;
 
             var userInfo = new
             {

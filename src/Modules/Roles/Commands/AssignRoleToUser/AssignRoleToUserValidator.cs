@@ -1,29 +1,30 @@
 using FluentValidation;
+using ModularMonolith.Roles.Services;
 
 namespace ModularMonolith.Roles.Commands.AssignRoleToUser;
 
 /// <summary>
-/// Validator for AssignRoleToUserCommand following the 3-file pattern
+/// Validator for AssignRoleToUserCommand following the 3-file pattern with localized messages
 /// </summary>
 public sealed class AssignRoleToUserValidator : AbstractValidator<AssignRoleToUserCommand>
 {
-    public AssignRoleToUserValidator()
+    public AssignRoleToUserValidator(IRoleLocalizationService roleLocalizationService)
     {
         RuleFor(x => x.UserId)
             .NotEmpty()
-            .WithMessage("User ID is required")
+            .WithMessage(roleLocalizationService.GetString("UserIdRequired"))
             .NotEqual(Guid.Empty)
-            .WithMessage("User ID must be a valid GUID");
+            .WithMessage(roleLocalizationService.GetString("UserIdInvalid"));
 
         RuleFor(x => x.RoleId)
             .NotEmpty()
-            .WithMessage("Role ID is required")
+            .WithMessage(roleLocalizationService.GetString("RoleIdRequired"))
             .NotEqual(Guid.Empty)
-            .WithMessage("Role ID must be a valid GUID");
+            .WithMessage(roleLocalizationService.GetString("RoleIdInvalid"));
 
         RuleFor(x => x.AssignedBy)
             .NotEqual(Guid.Empty)
-            .WithMessage("AssignedBy must be a valid GUID when provided")
+            .WithMessage(roleLocalizationService.GetString("AssignedByInvalid"))
             .When(x => x.AssignedBy.HasValue);
     }
 }

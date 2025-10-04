@@ -1,0 +1,13 @@
+{
+  "RoleNameRequired": "Nome da função é obrigatório",
+  "RoleNameMaxLength": "Nome da função não deve exceder 100 caracteres",
+  "RoleIdRequired": "ID da função é obrigatório",
+  "RoleIdInvalid": "ID da função deve ser um GUID válido",
+  "PermissionsRequired": "Pelo menos uma permissão é obrigatória",
+  "RoleNotFound": "Função não encontrada",
+  "RoleAlreadyExists": "Função com este nome já existe",
+  "RoleCreationFailed": "Falha ao criar função",
+  "RoleUpdateFailed": "Falha ao atualizar função",
+  "RoleDeletionFailed": "Falha ao excluir função",
+  "RoleAssignmentFailed": "Falha ao atribuir função ao usuário"
+}
