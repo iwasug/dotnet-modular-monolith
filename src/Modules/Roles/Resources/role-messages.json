@@ -34,5 +34,6 @@
   "RoleDeletionFailed": "Failed to delete role",
   "RoleAssignmentFailed": "Failed to assign role to user",
   "RolesRetrievalFailed": "Failed to retrieve roles",
-  "UserRolesRetrievalFailed": "Failed to retrieve user roles"
+  "UserRolesRetrievalFailed": "Failed to retrieve user roles",
+  "FeatureDisabled": "Role management feature is currently disabled"
 }

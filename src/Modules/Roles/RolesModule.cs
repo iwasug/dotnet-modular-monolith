@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FeatureManagement;
 
 namespace ModularMonolith.Roles;
 
@@ -25,6 +26,9 @@ public sealed class RolesModule : IModule, IEndpointModule
 {
     public void RegisterServices(IServiceCollection services)
     {
+        // Register Feature Management
+        services.AddFeatureManagement();
+
         // Register base repository
         services.AddScoped<RoleRepository>(provider => 
             new RoleRepository(

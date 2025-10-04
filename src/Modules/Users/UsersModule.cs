@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
+using Microsoft.FeatureManagement;
 
 namespace ModularMonolith.Users;
 
@@ -23,6 +24,9 @@ public sealed class UsersModule : IModule, IEndpointModule
 {
     public void RegisterServices(IServiceCollection services)
     {
+        // Register Feature Management
+        services.AddFeatureManagement();
+
         // Register domain services
         services.AddScoped<ModularMonolith.Users.Domain.Services.IPasswordHashingService, PasswordHashingService>();
         services.AddScoped<IUserValidationService, UserValidationService>();

@@ -17,5 +17,6 @@
   "UserAlreadyExists": "User with this email already exists",
   "UserCreationFailed": "Failed to create user",
   "UserUpdateFailed": "Failed to update user",
-  "UserDeletionFailed": "Failed to delete user"
+  "UserDeletionFailed": "Failed to delete user",
+  "FeatureDisabled": "User management feature is currently disabled"
 }

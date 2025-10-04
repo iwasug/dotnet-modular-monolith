@@ -9,10 +9,12 @@ using ModularMonolith.Roles.Queries.GetRole;
 using ModularMonolith.Roles.Queries.GetRoles;
 using ModularMonolith.Roles.Queries.GetUserRoles;
 using ModularMonolith.Roles.Authorization;
+using ModularMonolith.Roles.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.FeatureManagement;
 
 namespace ModularMonolith.Roles.Endpoints;
 
@@ -34,8 +36,19 @@ internal static class RoleEndpoints
             [FromBody] CreateRoleCommand command,
             [FromServices] IValidator<CreateRoleCommand> validator,
             [FromServices] ICommandHandler<CreateRoleCommand, CreateRoleResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IRoleLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if role management feature is enabled
+            if (!await featureManager.IsEnabledAsync("RoleManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             // Validate the command
             var validationResult = await validator.ValidateAsync(command, cancellationToken);
             if (!validationResult.IsValid)
@@ -72,8 +85,19 @@ internal static class RoleEndpoints
             [FromRoute] Guid id,
             [FromServices] IValidator<GetRoleQuery> validator,
             [FromServices] IQueryHandler<GetRoleQuery, GetRoleResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IRoleLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if role management feature is enabled
+            if (!await featureManager.IsEnabledAsync("RoleManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             var query = new GetRoleQuery(id);
 
             // Validate the query
@@ -111,6 +135,8 @@ internal static class RoleEndpoints
         roles.MapGet("/", async (
             [FromServices] IValidator<GetRolesQuery> validator,
             [FromServices] IQueryHandler<GetRolesQuery, GetRolesResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IRoleLocalizationService localizationService,
             CancellationToken cancellationToken,
             [FromQuery] string? nameFilter = null,
             [FromQuery] string? permissionResource = null,
@@ -118,6 +144,15 @@ internal static class RoleEndpoints
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10) =>
         {
+            // Check if role management feature is enabled
+            if (!await featureManager.IsEnabledAsync("RoleManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             var query = new GetRolesQuery(nameFilter, permissionResource, permissionAction, pageNumber, pageSize);
 
             // Validate the query
@@ -155,8 +190,19 @@ internal static class RoleEndpoints
             [FromBody] UpdateRoleRequest request,
             [FromServices] IValidator<UpdateRoleCommand> validator,
             [FromServices] ICommandHandler<UpdateRoleCommand, UpdateRoleResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IRoleLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if role management feature is enabled
+            if (!await featureManager.IsEnabledAsync("RoleManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             var commandPermissions = request.Permissions
                 .Select(p => new ModularMonolith.Roles.Commands.UpdateRole.PermissionDto(p.Resource, p.Action, p.Scope))
                 .ToList();
@@ -200,8 +246,19 @@ internal static class RoleEndpoints
             [FromRoute] Guid id,
             [FromServices] IValidator<DeleteRoleCommand> validator,
             [FromServices] ICommandHandler<DeleteRoleCommand, DeleteRoleResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IRoleLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if role management feature is enabled
+            if (!await featureManager.IsEnabledAsync("RoleManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             var command = new DeleteRoleCommand(id);
 
             // Validate the command
@@ -241,8 +298,19 @@ internal static class RoleEndpoints
             [FromRoute] Guid userId,
             [FromServices] IValidator<AssignRoleToUserCommand> validator,
             [FromServices] ICommandHandler<AssignRoleToUserCommand, AssignRoleToUserResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IRoleLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if role management feature is enabled
+            if (!await featureManager.IsEnabledAsync("RoleManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             var command = new AssignRoleToUserCommand(userId, roleId);
 
             // Validate the command
@@ -283,8 +351,19 @@ internal static class RoleEndpoints
             [FromRoute] Guid userId,
             [FromServices] IValidator<GetUserRolesQuery> validator,
             [FromServices] IQueryHandler<GetUserRolesQuery, GetUserRolesResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IRoleLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if role management feature is enabled
+            if (!await featureManager.IsEnabledAsync("RoleManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             var query = new GetUserRolesQuery(userId);
 
             // Validate the query

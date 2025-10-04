@@ -6,10 +6,12 @@ using ModularMonolith.Users.Commands.UpdateUser;
 using ModularMonolith.Users.Commands.DeleteUser;
 using ModularMonolith.Users.Queries.GetUser;
 using ModularMonolith.Users.Authorization;
+using ModularMonolith.Users.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.FeatureManagement;
 
 namespace ModularMonolith.Users.Endpoints;
 
@@ -31,8 +33,19 @@ internal static class UserEndpoints
             [FromBody] CreateUserCommand command,
             [FromServices] IValidator<CreateUserCommand> validator,
             [FromServices] ICommandHandler<CreateUserCommand, CreateUserResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IUserLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if user management feature is enabled
+            if (!await featureManager.IsEnabledAsync("UserManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             // Validate the command
             var validationResult = await validator.ValidateAsync(command, cancellationToken);
             if (!validationResult.IsValid)
@@ -69,8 +82,19 @@ internal static class UserEndpoints
             [FromRoute] Guid id,
             [FromServices] IValidator<GetUserQuery> validator,
             [FromServices] IQueryHandler<GetUserQuery, GetUserResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IUserLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if user management feature is enabled
+            if (!await featureManager.IsEnabledAsync("UserManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             var query = new GetUserQuery(id);
 
             // Validate the query
@@ -110,8 +134,19 @@ internal static class UserEndpoints
             [FromBody] UpdateUserCommand command,
             [FromServices] IValidator<UpdateUserCommand> validator,
             [FromServices] ICommandHandler<UpdateUserCommand, UpdateUserResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IUserLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if user management feature is enabled
+            if (!await featureManager.IsEnabledAsync("UserManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             // Ensure route ID matches command ID
             if (id != command.Id)
             {
@@ -156,8 +191,19 @@ internal static class UserEndpoints
             [FromRoute] Guid id,
             [FromServices] IValidator<DeleteUserCommand> validator,
             [FromServices] ICommandHandler<DeleteUserCommand, DeleteUserResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IUserLocalizationService localizationService,
             CancellationToken cancellationToken) =>
         {
+            // Check if user management feature is enabled
+            if (!await featureManager.IsEnabledAsync("UserManagement"))
+            {
+                return Results.Problem(
+                    detail: localizationService.GetString("FeatureDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             var command = new DeleteUserCommand(id);
 
             // Validate the command

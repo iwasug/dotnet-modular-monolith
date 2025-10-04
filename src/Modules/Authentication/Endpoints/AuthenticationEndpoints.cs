@@ -5,10 +5,13 @@ using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Authentication.Commands.Login;
 using ModularMonolith.Authentication.Commands.RefreshToken;
 using ModularMonolith.Authentication.Commands.Logout;
+using ModularMonolith.Authentication.Commands.Register;
+using ModularMonolith.Authentication.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.FeatureManagement;
 
 namespace ModularMonolith.Authentication.Endpoints;
 
@@ -25,14 +28,82 @@ internal static class AuthenticationEndpoints
         var auth = app.MapGroup("/api/auth")
             .WithTags("Authentication");
 
+        // POST /api/auth/register - User registration (with feature flag)
+        auth.MapPost("/register", async (
+            [FromBody] RegisterCommand command,
+            [FromServices] IValidator<RegisterCommand> validator,
+            [FromServices] ICommandHandler<RegisterCommand, RegisterResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IAuthLocalizationService authLocalizationService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            // Check if registration feature is enabled
+            bool isRegistrationEnabled = await featureManager.IsEnabledAsync("UserRegistration");
+            if (!isRegistrationEnabled)
+            {
+                return Results.Problem(
+                    detail: authLocalizationService.GetString("RegistrationDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
+            // Add security headers
+            context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+            context.Response.Headers.Append("Cache-Control", "no-store, no-cache, must-revalidate, private");
+            
+            // Validate the command
+            var validationResult = await validator.ValidateAsync(command, cancellationToken);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+
+            // Execute the command
+            var result = await handler.Handle(command, cancellationToken);
+
+            return result.Match(
+                success => Results.Ok(success),
+                error => error.Type switch
+                {
+                    ErrorType.Conflict => Results.Problem(
+                        detail: error.Message,
+                        statusCode: 409,
+                        title: "Conflict"),
+                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
+                    _ => Results.Problem("Registration failed", statusCode: 500)
+                }
+            );
+        })
+        .WithName("Register")
+        .WithSummary("User registration")
+        .WithDescription("Registers a new user account. This endpoint is controlled by the UserRegistration feature flag.")
+        .AllowAnonymous()
+        .Produces<RegisterResponse>(200)
+        .ProducesValidationProblem()
+        .Produces(403)
+        .Produces(409)
+        .Produces(500);
+
         // POST /api/auth/login - User login
         auth.MapPost("/login", async (
             [FromBody] LoginCommand command,
             [FromServices] IValidator<LoginCommand> validator,
             [FromServices] ICommandHandler<LoginCommand, LoginResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IAuthLocalizationService authLocalizationService,
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
+            // Check if login feature is enabled
+            if (!await featureManager.IsEnabledAsync("UserLogin"))
+            {
+                return Results.Problem(
+                    detail: authLocalizationService.GetString("LoginDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             // Add security headers for authentication endpoint
             context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
             context.Response.Headers.Append("Cache-Control", "no-store, no-cache, must-revalidate, private");
@@ -84,9 +155,20 @@ internal static class AuthenticationEndpoints
             [FromBody] RefreshTokenCommand command,
             [FromServices] IValidator<RefreshTokenCommand> validator,
             [FromServices] ICommandHandler<RefreshTokenCommand, RefreshTokenResponse> handler,
+            [FromServices] IFeatureManager featureManager,
+            [FromServices] IAuthLocalizationService authLocalizationService,
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
+            // Check if token refresh feature is enabled
+            if (!await featureManager.IsEnabledAsync("TokenRefresh"))
+            {
+                return Results.Problem(
+                    detail: authLocalizationService.GetString("TokenRefreshDisabled"),
+                    statusCode: 403,
+                    title: "Feature Disabled");
+            }
+
             // Add security headers for token refresh endpoint
             context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
             context.Response.Headers.Append("Cache-Control", "no-store, no-cache, must-revalidate, private");
