@@ -10,7 +10,7 @@ namespace ModularMonolith.Api.Endpoints;
 /// </summary>
 public sealed class LocalizationEndpoints : IEndpointModule
 {
-    public void MapEndpoints(IEndpointRouteBuilder endpoints)
+    public void MapEndpoints(WebApplication endpoints)
     {
         var localization = endpoints.MapGroup("/api/localization")
             .WithTags("Localization")

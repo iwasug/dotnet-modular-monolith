@@ -53,11 +53,7 @@ public static class LocalizationExtensions
                 // 3. Cookie (for user preference persistence)
                 new CookieRequestCultureProvider
                 {
-                    CookieName = "UserCulture",
-                    Options = new CookieRequestCultureProviderOptions
-                    {
-                        DefaultRequestCulture = new RequestCulture("en-US")
-                    }
+                    CookieName = "UserCulture"
                 }
             };
 

@@ -511,7 +511,7 @@ monitoring/
 
 # Cache directories
 .cache/
-cache/
+#cache/
 
 # Temporary files
 *.tmp
