@@ -2,6 +2,8 @@ using ModularMonolith.Shared.Common;
 using ModularMonolith.Shared.Extensions;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Users.Commands.CreateUser;
+using ModularMonolith.Users.Commands.UpdateUser;
+using ModularMonolith.Users.Commands.DeleteUser;
 using ModularMonolith.Users.Queries.GetUser;
 using ModularMonolith.Users.Authorization;
 using FluentValidation;
@@ -96,6 +98,93 @@ internal static class UserEndpoints
         .WithDescription("Retrieves a user by their unique identifier")
         .RequirePermission(Users.Authorization.UserPermissions.RESOURCE, Users.Authorization.UserPermissions.Actions.READ)
         .Produces<GetUserResponse>(200)
+        .ProducesValidationProblem()
+        .Produces(401)
+        .Produces(403)
+        .Produces(404)
+        .Produces(500);
+
+        // PUT /api/users/{id} - Update user
+        users.MapPut("/{id:guid}", async (
+            [FromRoute] Guid id,
+            [FromBody] UpdateUserCommand command,
+            [FromServices] IValidator<UpdateUserCommand> validator,
+            [FromServices] ICommandHandler<UpdateUserCommand, UpdateUserResponse> handler,
+            CancellationToken cancellationToken) =>
+        {
+            // Ensure route ID matches command ID
+            if (id != command.Id)
+            {
+                return Results.BadRequest(new { Code = "ID_MISMATCH", Message = "Route ID does not match command ID" });
+            }
+
+            // Validate the command
+            var validationResult = await validator.ValidateAsync(command, cancellationToken);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+
+            // Execute the command
+            var result = await handler.Handle(command, cancellationToken);
+
+            return result.Match(
+                success => Results.Ok(success),
+                error => error.Type switch
+                {
+                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
+                    ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
+                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
+                    _ => Results.Problem(error.Message, statusCode: 500)
+                }
+            );
+        })
+        .WithName("UpdateUser")
+        .WithSummary("Update an existing user")
+        .WithDescription("Updates user information by their unique identifier")
+        .RequirePermission(Users.Authorization.UserPermissions.RESOURCE, Users.Authorization.UserPermissions.Actions.UPDATE)
+        .Produces<UpdateUserResponse>(200)
+        .ProducesValidationProblem()
+        .Produces(401)
+        .Produces(403)
+        .Produces(404)
+        .Produces(409)
+        .Produces(500);
+
+        // DELETE /api/users/{id} - Delete user
+        users.MapDelete("/{id:guid}", async (
+            [FromRoute] Guid id,
+            [FromServices] IValidator<DeleteUserCommand> validator,
+            [FromServices] ICommandHandler<DeleteUserCommand, DeleteUserResponse> handler,
+            CancellationToken cancellationToken) =>
+        {
+            var command = new DeleteUserCommand(id);
+
+            // Validate the command
+            var validationResult = await validator.ValidateAsync(command, cancellationToken);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+
+            // Execute the command
+            var result = await handler.Handle(command, cancellationToken);
+
+            return result.Match(
+                success => Results.Ok(success),
+                error => error.Type switch
+                {
+                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
+                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
+                    _ => Results.Problem(error.Message, statusCode: 500)
+                }
+            );
+        })
+        .WithName("DeleteUser")
+        .WithSummary("Delete a user")
+        .WithDescription("Soft deletes a user by their unique identifier")
+        .RequirePermission(Users.Authorization.UserPermissions.RESOURCE, Users.Authorization.UserPermissions.Actions.DELETE)
+        .Produces<DeleteUserResponse>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)

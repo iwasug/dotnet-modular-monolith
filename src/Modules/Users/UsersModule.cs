@@ -1,5 +1,7 @@
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Users.Commands.CreateUser;
+using ModularMonolith.Users.Commands.UpdateUser;
+using ModularMonolith.Users.Commands.DeleteUser;
 using ModularMonolith.Users.Queries.GetUser;
 using ModularMonolith.Users.Infrastructure;
 using ModularMonolith.Users.Domain;
@@ -40,12 +42,16 @@ public sealed class UsersModule : IModule, IEndpointModule
 
         // Register command handlers
         services.AddScoped<ICommandHandler<CreateUserCommand, CreateUserResponse>, CreateUserHandler>();
+        services.AddScoped<ICommandHandler<UpdateUserCommand, UpdateUserResponse>, UpdateUserHandler>();
+        services.AddScoped<ICommandHandler<DeleteUserCommand, DeleteUserResponse>, DeleteUserHandler>();
 
         // Register query handlers
         services.AddScoped<IQueryHandler<GetUserQuery, GetUserResponse>, GetUserHandler>();
 
         // Register FluentValidation validators
         services.AddScoped<IValidator<CreateUserCommand>, CreateUserValidator>();
+        services.AddScoped<IValidator<UpdateUserCommand>, UpdateUserValidator>();
+        services.AddScoped<IValidator<DeleteUserCommand>, DeleteUserValidator>();
         services.AddScoped<IValidator<GetUserQuery>, GetUserValidator>();
         
         // Configure validator lifetime scopes - validators are typically scoped

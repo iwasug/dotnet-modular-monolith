@@ -3,6 +3,7 @@ using ModularMonolith.Shared.Extensions;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Roles.Commands.CreateRole;
 using ModularMonolith.Roles.Commands.UpdateRole;
+using ModularMonolith.Roles.Commands.DeleteRole;
 using ModularMonolith.Roles.Commands.AssignRoleToUser;
 using ModularMonolith.Roles.Queries.GetRole;
 using ModularMonolith.Roles.Queries.GetRoles;
@@ -192,6 +193,46 @@ internal static class RoleEndpoints
         .Produces(403)
         .Produces(404)
         .Produces(409)
+        .Produces(500);
+
+        // DELETE /api/roles/{id} - Delete role
+        roles.MapDelete("/{id:guid}", async (
+            [FromRoute] Guid id,
+            [FromServices] IValidator<DeleteRoleCommand> validator,
+            [FromServices] ICommandHandler<DeleteRoleCommand, DeleteRoleResponse> handler,
+            CancellationToken cancellationToken) =>
+        {
+            var command = new DeleteRoleCommand(id);
+
+            // Validate the command
+            var validationResult = await validator.ValidateAsync(command, cancellationToken);
+            if (!validationResult.IsValid)
+            {
+                return Results.ValidationProblem(validationResult.ToDictionary());
+            }
+
+            // Execute the command
+            var result = await handler.Handle(command, cancellationToken);
+
+            return result.Match(
+                success => Results.Ok(success),
+                error => error.Type switch
+                {
+                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
+                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
+                    _ => Results.Problem(error.Message, statusCode: 500)
+                }
+            );
+        })
+        .WithName("DeleteRole")
+        .WithSummary("Delete a role")
+        .WithDescription("Soft deletes a role by its unique identifier")
+        .RequirePermission(Roles.Authorization.RolePermissions.RESOURCE, Roles.Authorization.RolePermissions.Actions.DELETE)
+        .Produces<DeleteRoleResponse>(200)
+        .ProducesValidationProblem()
+        .Produces(401)
+        .Produces(403)
+        .Produces(404)
         .Produces(500);
 
         // POST /api/roles/{roleId}/assign/{userId} - Assign role to user
