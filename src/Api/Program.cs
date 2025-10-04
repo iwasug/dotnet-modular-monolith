@@ -49,7 +49,7 @@ builder.Services.AddSingleton<IMetricsService, MetricsService>();
 builder.Services.AddComprehensiveHealthChecks(builder.Configuration);
 
 // Register modular architecture
-builder.Services.AddSharedKernel();
+builder.Services.AddSharedKernel(builder.Configuration);
 builder.Services.AddModule<UsersModule>();
 builder.Services.AddModule<RolesModule>();
 builder.Services.AddModule<AuthenticationModule>();

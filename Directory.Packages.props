@@ -55,5 +55,9 @@
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.2.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Authorization" Version="9.0.0" />
+    
+    <!-- Email packages -->
+    <PackageVersion Include="MailKit" Version="4.8.0" />
+    <PackageVersion Include="MimeKit" Version="4.8.0" />
   </ItemGroup>
 </Project>

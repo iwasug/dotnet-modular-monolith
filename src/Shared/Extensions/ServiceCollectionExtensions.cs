@@ -1,6 +1,8 @@
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Shared.Services;
 using ModularMonolith.Shared.Authorization;
+using ModularMonolith.Shared.Common;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ModularMonolith.Shared.Extensions;
@@ -13,7 +15,7 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Adds shared kernel services to the dependency injection container
     /// </summary>
-    public static IServiceCollection AddSharedKernel(this IServiceCollection services)
+    public static IServiceCollection AddSharedKernel(this IServiceCollection services, IConfiguration configuration)
     {
         // Register time service
         services.AddSingleton<ITimeService, TimeService>();
@@ -30,6 +32,10 @@ public static class ServiceCollectionExtensions
         
         // Register localized error service
         services.AddSingleton<ILocalizedErrorService, LocalizedErrorService>();
+        
+        // Register email service
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.AddTransient<IEmailService, EmailService>();
         
         // Register other shared services here
         return services;
