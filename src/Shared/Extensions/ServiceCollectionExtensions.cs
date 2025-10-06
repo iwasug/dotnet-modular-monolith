@@ -50,6 +50,26 @@ public static class ServiceCollectionExtensions
         module.RegisterServices(services);
         return services;
     }
+
+    /// <summary>
+    /// Registers a module with the dependency injection container if the feature flag is enabled
+    /// </summary>
+    public static IServiceCollection AddModuleWithFeature<TModule>(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string featureName)
+        where TModule : class, IModule, new()
+    {
+        var isEnabled = configuration.GetValue<bool>($"FeatureManagement:Modules:{featureName}", true);
+        
+        if (isEnabled)
+        {
+            var module = new TModule();
+            module.RegisterServices(services);
+        }
+        
+        return services;
+    }
     
     /// <summary>
     /// Adds fake time service for testing

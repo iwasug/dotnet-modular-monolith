@@ -50,9 +50,9 @@ builder.Services.AddComprehensiveHealthChecks(builder.Configuration);
 
 // Register modular architecture
 builder.Services.AddSharedKernel(builder.Configuration);
-builder.Services.AddModule<UsersModule>();
-builder.Services.AddModule<RolesModule>();
-builder.Services.AddModule<AuthenticationModule>();
+builder.Services.AddModuleWithFeature<UsersModule>(builder.Configuration, "Users");
+builder.Services.AddModuleWithFeature<RolesModule>(builder.Configuration, "Roles");
+builder.Services.AddModuleWithFeature<AuthenticationModule>(builder.Configuration, "Authentication");
 builder.Services.AddModule<InfrastructureModule>();
 
 var app = builder.Build();
@@ -94,12 +94,13 @@ app.UseAuthorization();
 // Map comprehensive health check endpoints
 app.MapComprehensiveHealthChecks();
 
-// Map module endpoints automatically
-app.MapModuleEndpoints(
-    typeof(UsersModule).Assembly,
-    typeof(RolesModule).Assembly,
-    typeof(AuthenticationModule).Assembly
-);
+// Map module endpoints with feature flag support
+app.MapModuleEndpointsWithFeature(new Dictionary<Type, string>
+{
+    { typeof(UsersModule), "Users" },
+    { typeof(RolesModule), "Roles" },
+    { typeof(AuthenticationModule), "Authentication" }
+});
 
 // Map API-specific endpoints
 app.MapMetricsEndpoints();

@@ -1,5 +1,6 @@
 using ModularMonolith.Shared.Interfaces;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using System.Reflection;
 
 namespace ModularMonolith.Shared.Extensions;
@@ -62,6 +63,34 @@ public static class EndpointExtensions
             {
                 var module = serviceProvider.GetService(moduleType) as IEndpointModule;
                 module?.MapEndpoints(app);
+            }
+        }
+
+        return app;
+    }
+
+    /// <summary>
+    /// Maps endpoints from modules that implement IEndpointModule only if their feature flag is enabled
+    /// </summary>
+    /// <param name="app">The web application</param>
+    /// <param name="moduleFeatureMap">Dictionary mapping module types to their feature flag names</param>
+    /// <returns>The web application for chaining</returns>
+    public static WebApplication MapModuleEndpointsWithFeature(
+        this WebApplication app,
+        Dictionary<Type, string> moduleFeatureMap)
+    {
+        var configuration = app.Configuration;
+
+        foreach (var (moduleType, featureName) in moduleFeatureMap)
+        {
+            var isEnabled = configuration.GetValue<bool>($"FeatureManagement:Modules:{featureName}", true);
+
+            if (isEnabled && typeof(IEndpointModule).IsAssignableFrom(moduleType))
+            {
+                if (Activator.CreateInstance(moduleType) is IEndpointModule module)
+                {
+                    module.MapEndpoints(app);
+                }
             }
         }
 

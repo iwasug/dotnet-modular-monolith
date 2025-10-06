@@ -93,22 +93,6 @@ public static class SwaggerExtensions
             options.DocumentFilter<TagOrderDocumentFilter>();
             options.DocumentFilter<LocalizationDocumentFilter>();
 
-            // Configure servers based on environment
-            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
-            if (environment == "Development")
-            {
-                options.AddServer(new OpenApiServer
-                {
-                    Url = "https://localhost:5001",
-                    Description = "Development HTTPS Server"
-                });
-                options.AddServer(new OpenApiServer
-                {
-                    Url = "http://localhost:5000",
-                    Description = "Development HTTP Server"
-                });
-            }
-
             // Enable annotations for richer documentation
             options.EnableAnnotations();
             
@@ -140,6 +124,20 @@ public static class SwaggerExtensions
             options.RouteTemplate = "api-docs/{documentName}/swagger.json";
             options.PreSerializeFilters.Add((swagger, httpReq) =>
             {
+                // Dynamically set server URL based on the actual request
+                var scheme = httpReq.Scheme;
+                var host = httpReq.Host.Value;
+                var serverUrl = $"{scheme}://{host}";
+                
+                swagger.Servers = new List<OpenApiServer>
+                {
+                    new OpenApiServer
+                    {
+                        Url = serverUrl,
+                        Description = $"Current Server ({scheme.ToUpper()})"
+                    }
+                };
+                
                 // Add localization support based on Accept-Language header
                 var acceptLanguage = httpReq.Headers["Accept-Language"].FirstOrDefault();
                 if (!string.IsNullOrEmpty(acceptLanguage))
@@ -416,10 +414,17 @@ public sealed class LocalizationOperationFilter : IOperationFilter
                 Schema = new OpenApiSchema
                 {
                     Type = "string",
-                    Default = new Microsoft.OpenApi.Any.OpenApiString("en-US"),
-                    Example = new Microsoft.OpenApi.Any.OpenApiString("en-US, es-ES, fr-FR, de-DE")
+                    Enum = new List<Microsoft.OpenApi.Any.IOpenApiAny>
+                    {
+                        new Microsoft.OpenApi.Any.OpenApiString("en-US"),
+                        new Microsoft.OpenApi.Any.OpenApiString("es-ES"),
+                        new Microsoft.OpenApi.Any.OpenApiString("fr-FR"),
+                        new Microsoft.OpenApi.Any.OpenApiString("de-DE"),
+                        new Microsoft.OpenApi.Any.OpenApiString("id-ID")
+                    },
+                    Default = new Microsoft.OpenApi.Any.OpenApiString("en-US")
                 },
-                Description = "Preferred language for localized responses. Supported languages: en-US (default), es-ES, fr-FR, de-DE"
+                Description = "Preferred language for localized responses. Supported languages: en-US (English), es-ES (Spanish), fr-FR (French), de-DE (German), id-ID (Indonesian)"
             });
         }
     }
@@ -487,7 +492,8 @@ public sealed class LocalizationDocumentFilter : IDocumentFilter
             new Microsoft.OpenApi.Any.OpenApiString("en-US"),
             new Microsoft.OpenApi.Any.OpenApiString("es-ES"),
             new Microsoft.OpenApi.Any.OpenApiString("fr-FR"),
-            new Microsoft.OpenApi.Any.OpenApiString("de-DE")
+            new Microsoft.OpenApi.Any.OpenApiString("de-DE"),
+            new Microsoft.OpenApi.Any.OpenApiString("id-ID")
         });
         
         // Add extension for API versioning
