@@ -1,6 +1,7 @@
 using ModularMonolith.Shared.Common;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Users.Domain;
+using ModularMonolith.Users.Domain.ValueObjects;
 using ModularMonolith.Users.Services;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +10,7 @@ namespace ModularMonolith.Users.Queries.GetUser;
 /// <summary>
 /// Handler for GetUserQuery following the 3-file pattern
 /// </summary>
-public class GetUserHandler : IQueryHandler<GetUserQuery, GetUserResponse>
+internal sealed class GetUserHandler : IQueryHandler<GetUserQuery, GetUserResponse>
 {
     private readonly ILogger<GetUserHandler> _logger;
     private readonly IUserRepository _userRepository;
@@ -41,7 +42,8 @@ public class GetUserHandler : IQueryHandler<GetUserQuery, GetUserResponse>
         try
         {
             // Get user from repository
-            User? user = await _userRepository.GetByIdAsync(query.UserId, cancellationToken);
+            UserId userId = UserId.From(query.UserId);
+            User? user = await _userRepository.GetByIdAsync(userId, cancellationToken);
             if (user is null)
             {
                 _logger.LogWarning("User with ID {UserId} not found", query.UserId);

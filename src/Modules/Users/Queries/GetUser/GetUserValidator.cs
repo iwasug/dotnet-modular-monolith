@@ -6,7 +6,7 @@ namespace ModularMonolith.Users.Queries.GetUser;
 /// <summary>
 /// Validator for GetUserQuery following the 3-file pattern with localized messages
 /// </summary>
-public class GetUserValidator : AbstractValidator<GetUserQuery>
+internal sealed class GetUserValidator : AbstractValidator<GetUserQuery>
 {
     public GetUserValidator(IUserLocalizationService userLocalizationService)
     {

@@ -5,7 +5,7 @@ namespace ModularMonolith.Shared.Services;
 /// <summary>
 /// Fake time service for testing purposes
 /// </summary>
-public class FakeTimeService : ITimeService
+internal sealed class FakeTimeService : ITimeService
 {
     private DateTime _currentTime;
     

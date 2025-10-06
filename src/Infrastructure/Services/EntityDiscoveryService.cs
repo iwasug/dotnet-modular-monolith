@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ModularMonolith.Infrastructure.Data;
 using ModularMonolith.Shared.Domain;
-using System.Reflection;
 
 namespace ModularMonolith.Infrastructure.Services;
 

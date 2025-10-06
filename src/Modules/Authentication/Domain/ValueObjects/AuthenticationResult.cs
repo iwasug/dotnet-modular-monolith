@@ -25,7 +25,7 @@ public sealed class AuthenticationResult : ValueObject
     /// </summary>
     public static AuthenticationResult Success(TokenResult tokenResult)
     {
-        if (tokenResult == null)
+        if (tokenResult is null)
         {
             throw new ArgumentNullException(nameof(tokenResult));
         }

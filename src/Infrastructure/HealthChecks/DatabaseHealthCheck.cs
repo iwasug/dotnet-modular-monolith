@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.EntityFrameworkCore;
 using ModularMonolith.Infrastructure.Data;
 using ModularMonolith.Infrastructure.Data.Migrations;
 

@@ -8,7 +8,7 @@ namespace ModularMonolith.Shared.Services;
 /// Simple password hashing service for testing purposes
 /// In production, use BCrypt or similar
 /// </summary>
-public class SimplePasswordHashingService : IPasswordHashingService
+internal sealed class SimplePasswordHashingService : IPasswordHashingService
 {
     public string HashPassword(string password)
     {

@@ -10,7 +10,7 @@ namespace ModularMonolith.Roles.Queries.GetRole;
 /// <summary>
 /// Handler for GetRoleQuery following the 3-file pattern
 /// </summary>
-public sealed class GetRoleHandler : IQueryHandler<GetRoleQuery, GetRoleResponse>
+internal sealed class GetRoleHandler : IQueryHandler<GetRoleQuery, GetRoleResponse>
 {
     private readonly ILogger<GetRoleHandler> _logger;
     private readonly IRoleRepository _roleRepository;

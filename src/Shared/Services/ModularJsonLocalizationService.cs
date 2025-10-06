@@ -19,11 +19,11 @@ public sealed class ModularJsonLocalizationService : IModularLocalizationService
     // Module configuration - defines which modules have localization resources
     private readonly Dictionary<string, string> _moduleResourcePaths = new()
     {
-        ["Users"] = "src/Modules/Users/Resources",
-        ["Roles"] = "src/Modules/Roles/Resources", 
-        ["Authentication"] = "src/Modules/Authentication/Resources",
-        ["Api"] = "src/Api/Resources",
-        ["Shared"] = "src/Shared/Resources"
+        ["Users"] = "../Modules/Users/Resources",
+        ["Roles"] = "../Modules/Roles/Resources", 
+        ["Authentication"] = "../Modules/Authentication/Resources",
+        ["Api"] = "Resources",
+        ["Shared"] = "../Shared/Resources"
     };
 
     private readonly Dictionary<string, string[]> _moduleResourceFiles = new()

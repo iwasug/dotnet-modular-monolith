@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace ModularMonolith.Shared.Services;
 
 /// <summary>

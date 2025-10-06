@@ -1,7 +1,6 @@
 using ModularMonolith.Shared.Authorization;
 using ModularMonolith.Shared.Extensions;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
+using ModularMonolith.Shared.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ModularMonolith.Api.Endpoints;
@@ -26,7 +25,7 @@ internal static class PermissionEndpoints
         {
             var allPermissions = registry.GetAllPermissions();
             
-            var response = new
+            var data = new
             {
                 TotalCount = allPermissions.Count,
                 Permissions = allPermissions.Select(p => new
@@ -38,7 +37,7 @@ internal static class PermissionEndpoints
                 }).ToList()
             };
 
-            return Results.Ok(response);
+            return Results.Ok(ApiResponse<object>.Ok(data, "All permissions retrieved successfully"));
         })
         .WithName("GetAllPermissions")
         .WithSummary("Get all registered permissions")
@@ -55,7 +54,7 @@ internal static class PermissionEndpoints
         {
             var permissionsByModule = registry.GetPermissionsByModule();
             
-            var response = permissionsByModule.ToDictionary(
+            var data = permissionsByModule.ToDictionary(
                 kvp => kvp.Key,
                 kvp => new
                 {
@@ -71,7 +70,7 @@ internal static class PermissionEndpoints
                 }
             );
 
-            return Results.Ok(response);
+            return Results.Ok(ApiResponse<object>.Ok(data, "Permissions by module retrieved successfully"));
         })
         .WithName("GetPermissionsByModule")
         .WithSummary("Get permissions grouped by module")
@@ -88,7 +87,7 @@ internal static class PermissionEndpoints
         {
             var permissionsByResource = registry.GetPermissionsByResource();
             
-            var response = permissionsByResource.ToDictionary(
+            var data = permissionsByResource.ToDictionary(
                 kvp => kvp.Key,
                 kvp => new
                 {
@@ -103,7 +102,7 @@ internal static class PermissionEndpoints
                 }
             );
 
-            return Results.Ok(response);
+            return Results.Ok(ApiResponse<object>.Ok(data, "Permissions by resource retrieved successfully"));
         })
         .WithName("GetPermissionsByResource")
         .WithSummary("Get permissions grouped by resource")
@@ -120,7 +119,7 @@ internal static class PermissionEndpoints
         {
             var statistics = registry.GetStatistics();
             
-            var response = new
+            var data = new
             {
                 statistics.TotalPermissions,
                 statistics.TotalModules,
@@ -130,7 +129,7 @@ internal static class PermissionEndpoints
                 Summary = statistics.ToString()
             };
 
-            return Results.Ok(response);
+            return Results.Ok(ApiResponse<object>.Ok(data, "Permission statistics retrieved successfully"));
         })
         .WithName("GetPermissionStatistics")
         .WithSummary("Get permission statistics")
@@ -171,7 +170,7 @@ internal static class PermissionEndpoints
 
             var results = filteredPermissions.ToList();
             
-            var response = new
+            var data = new
             {
                 SearchCriteria = new { resource, action, scope },
                 TotalResults = results.Count,
@@ -184,7 +183,7 @@ internal static class PermissionEndpoints
                 }).ToList()
             };
 
-            return Results.Ok(response);
+            return Results.Ok(ApiResponse<object>.Ok(data, "Permission search completed successfully"));
         })
         .WithName("SearchPermissions")
         .WithSummary("Search permissions")
@@ -206,14 +205,11 @@ internal static class PermissionEndpoints
             
             if (permission is null)
             {
-                return Results.NotFound(new 
-                { 
-                    Message = $"Permission not found: {resource}:{action}:{scope}",
-                    SearchedFor = new { resource, action, scope }
-                });
+                var error = Error.NotFound("PERMISSION_NOT_FOUND", $"Permission not found: {resource}:{action}:{scope}");
+                return Results.NotFound(ApiResponse<object>.Fail(error.Message, error));
             }
 
-            var response = new
+            var data = new
             {
                 Found = true,
                 Permission = new
@@ -225,7 +221,7 @@ internal static class PermissionEndpoints
                 }
             };
 
-            return Results.Ok(response);
+            return Results.Ok(ApiResponse<object>.Ok(data, "Permission found successfully"));
         })
         .WithName("FindPermission")
         .WithSummary("Find specific permission")

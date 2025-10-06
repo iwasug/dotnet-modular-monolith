@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using ModularMonolith.Shared.Common;
-using ModularMonolith.Shared.Extensions;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Authentication.Commands.Login;
 using ModularMonolith.Authentication.Commands.RefreshToken;
@@ -42,10 +41,8 @@ internal static class AuthenticationEndpoints
             bool isRegistrationEnabled = await featureManager.IsEnabledAsync("UserRegistration");
             if (!isRegistrationEnabled)
             {
-                return Results.Problem(
-                    detail: authLocalizationService.GetString("RegistrationDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", authLocalizationService.GetString("RegistrationDisabled"));
+                return Results.Json(ApiResponse<RegisterResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             // Add security headers
@@ -63,15 +60,12 @@ internal static class AuthenticationEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<RegisterResponse>.Ok(success, "Registration successful")),
                 error => error.Type switch
                 {
-                    ErrorType.Conflict => Results.Problem(
-                        detail: error.Message,
-                        statusCode: 409,
-                        title: "Conflict"),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem("Registration failed", statusCode: 500)
+                    ErrorType.Conflict => Results.Conflict(ApiResponse<RegisterResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<RegisterResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<RegisterResponse>.Fail("Registration failed", error), statusCode: 500)
                 }
             );
         })
@@ -79,7 +73,7 @@ internal static class AuthenticationEndpoints
         .WithSummary("User registration")
         .WithDescription("Registers a new user account. This endpoint is controlled by the UserRegistration feature flag.")
         .AllowAnonymous()
-        .Produces<RegisterResponse>(200)
+        .Produces<ApiResponse<RegisterResponse>>(200)
         .ProducesValidationProblem()
         .Produces(403)
         .Produces(409)
@@ -98,10 +92,8 @@ internal static class AuthenticationEndpoints
             // Check if login feature is enabled
             if (!await featureManager.IsEnabledAsync("UserLogin"))
             {
-                return Results.Problem(
-                    detail: authLocalizationService.GetString("LoginDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", authLocalizationService.GetString("LoginDisabled"));
+                return Results.Json(ApiResponse<LoginResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             // Add security headers for authentication endpoint
@@ -119,24 +111,13 @@ internal static class AuthenticationEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => 
-                {
-                    // Set secure cookie options for refresh token if needed
-                    var response = Results.Ok(success);
-                    return response;
-                },
+                success => Results.Ok(ApiResponse<LoginResponse>.Ok(success, "Login successful")),
                 error => error.Type switch
                 {
-                    ErrorType.Unauthorized => Results.Problem(
-                        detail: "Invalid credentials",
-                        statusCode: 401,
-                        title: "Unauthorized"),
-                    ErrorType.Forbidden => Results.Problem(
-                        detail: "Account is locked or disabled",
-                        statusCode: 403,
-                        title: "Forbidden"),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem("Authentication failed", statusCode: 500)
+                    ErrorType.Unauthorized => Results.Json(ApiResponse<LoginResponse>.Fail(error.Message, error), statusCode: 401),
+                    ErrorType.Forbidden => Results.Json(ApiResponse<LoginResponse>.Fail(error.Message, error), statusCode: 403),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<LoginResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<LoginResponse>.Fail("Authentication failed", error), statusCode: 500)
                 }
             );
         })
@@ -144,7 +125,7 @@ internal static class AuthenticationEndpoints
         .WithSummary("User login")
         .WithDescription("Authenticates a user with email and password, returning JWT tokens")
         .AllowAnonymous()
-        .Produces<LoginResponse>(200)
+        .Produces<ApiResponse<LoginResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -163,10 +144,8 @@ internal static class AuthenticationEndpoints
             // Check if token refresh feature is enabled
             if (!await featureManager.IsEnabledAsync("TokenRefresh"))
             {
-                return Results.Problem(
-                    detail: authLocalizationService.GetString("TokenRefreshDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", authLocalizationService.GetString("TokenRefreshDisabled"));
+                return Results.Json(ApiResponse<RefreshTokenResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             // Add security headers for token refresh endpoint
@@ -184,15 +163,12 @@ internal static class AuthenticationEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<RefreshTokenResponse>.Ok(success, "Token refreshed successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.Unauthorized => Results.Problem(
-                        detail: "Invalid or expired refresh token",
-                        statusCode: 401,
-                        title: "Unauthorized"),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem("Token refresh failed", statusCode: 500)
+                    ErrorType.Unauthorized => Results.Json(ApiResponse<RefreshTokenResponse>.Fail(error.Message, error), statusCode: 401),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<RefreshTokenResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<RefreshTokenResponse>.Fail("Token refresh failed", error), statusCode: 500)
                 }
             );
         })
@@ -200,7 +176,7 @@ internal static class AuthenticationEndpoints
         .WithSummary("Refresh authentication tokens")
         .WithDescription("Refreshes JWT tokens using a valid refresh token")
         .AllowAnonymous()
-        .Produces<RefreshTokenResponse>(200)
+        .Produces<ApiResponse<RefreshTokenResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(500);
@@ -228,13 +204,13 @@ internal static class AuthenticationEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             // Always return success for security reasons (don't reveal if token was valid)
-            return Results.Ok(new LogoutResponse(true, "Logout completed successfully"));
+            return Results.Ok(ApiResponse<LogoutResponse>.Ok(new LogoutResponse(true, "Logout completed successfully"), "Logout completed successfully"));
         })
         .WithName("Logout")
         .WithSummary("User logout")
         .WithDescription("Logs out a user by revoking their refresh token")
         .AllowAnonymous()
-        .Produces<LogoutResponse>(200)
+        .Produces<ApiResponse<LogoutResponse>>(200)
         .ProducesValidationProblem()
         .Produces(500);
 
@@ -246,7 +222,8 @@ internal static class AuthenticationEndpoints
             ClaimsPrincipal user = context.User;
             if (!user.Identity?.IsAuthenticated == true)
             {
-                return Results.Unauthorized();
+                var error = Error.Unauthorized("NOT_AUTHENTICATED", "User is not authenticated");
+                return Results.Json(ApiResponse<object>.Fail("User is not authenticated", error), statusCode: 401);
             }
 
             // Extract user information from claims
@@ -263,7 +240,7 @@ internal static class AuthenticationEndpoints
                 Claims = user.Claims.Select(c => new { c.Type, c.Value }).ToList()
             };
 
-            return Results.Ok(userInfo);
+            return Results.Ok(ApiResponse<object>.Ok(userInfo, "User information retrieved successfully"));
         })
         .WithName("GetCurrentUser")
         .WithSummary("Get current user information")

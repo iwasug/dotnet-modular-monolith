@@ -1,7 +1,7 @@
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Shared.Services;
+using ModularMonolith.Shared.Common;
 using ModularMonolith.Api.Extensions;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ModularMonolith.Api.Endpoints;
 
@@ -21,36 +21,36 @@ public sealed class LocalizationEndpoints : IEndpointModule
             .WithName("GetSupportedCultures")
             .WithSummary("Get all supported cultures")
             .WithDescription("Returns a list of all supported culture codes for localization")
-            .Produces<SupportedCulturesResponse>();
+            .Produces<ApiResponse<SupportedCulturesResponse>>();
 
         // Get current culture
         localization.MapGet("/current-culture", GetCurrentCulture)
             .WithName("GetCurrentCulture")
             .WithSummary("Get current request culture")
             .WithDescription("Returns the current culture determined from the Accept-Language header")
-            .Produces<CurrentCultureResponse>();
+            .Produces<ApiResponse<CurrentCultureResponse>>();
 
         // Test localized message
         localization.MapGet("/test-message/{key}", GetLocalizedMessage)
             .WithName("GetLocalizedMessage")
             .WithSummary("Test localized message retrieval")
             .WithDescription("Returns a localized message for the given key in the current culture")
-            .Produces<LocalizedMessageResponse>()
-            .Produces<ProblemDetails>(404);
+            .Produces<ApiResponse<LocalizedMessageResponse>>()
+            .Produces<ApiResponse<LocalizedMessageResponse>>(404);
 
         // Test validation messages
         localization.MapPost("/test-validation", TestValidationMessages)
-            .WithName("TestValidationMessages")
+            .WithName("PostValidationTest")
             .WithSummary("Test localized validation messages")
             .WithDescription("Tests validation with localized error messages")
-            .Produces<ValidationTestResponse>()
+            .Produces<ApiResponse<ValidationTestResponse>>()
             .ProducesValidationProblem();
     }
 
     private static IResult GetSupportedCultures()
     {
         var cultures = LocalizationExtensions.GetSupportedCultures();
-        return Results.Ok(new SupportedCulturesResponse(cultures));
+        return Results.Ok(ApiResponse<SupportedCulturesResponse>.Ok(new SupportedCulturesResponse(cultures), "Supported cultures retrieved successfully"));
     }
 
     private static IResult GetCurrentCulture(HttpContext context)
@@ -58,7 +58,7 @@ public sealed class LocalizationEndpoints : IEndpointModule
         var culture = context.GetCurrentCultureWithFallback();
         var isRtl = context.IsRightToLeft();
         
-        return Results.Ok(new CurrentCultureResponse(culture, isRtl));
+        return Results.Ok(ApiResponse<CurrentCultureResponse>.Ok(new CurrentCultureResponse(culture, isRtl), "Current culture retrieved successfully"));
     }
 
     private static IResult GetLocalizedMessage(
@@ -71,13 +71,11 @@ public sealed class LocalizationEndpoints : IEndpointModule
         
         if (message == key) // Key not found
         {
-            return Results.Problem(
-                title: "Localization key not found",
-                detail: $"The localization key '{key}' was not found for culture '{culture}'",
-                statusCode: 404);
+            var error = Error.NotFound("LOCALIZATION_KEY_NOT_FOUND", $"The localization key '{key}' was not found for culture '{culture}'");
+            return Results.NotFound(ApiResponse<LocalizedMessageResponse>.Fail(error.Message, error));
         }
 
-        return Results.Ok(new LocalizedMessageResponse(key, message, culture));
+        return Results.Ok(ApiResponse<LocalizedMessageResponse>.Ok(new LocalizedMessageResponse(key, message, culture), "Localized message retrieved successfully"));
     }
 
     private static IResult TestValidationMessages(
@@ -111,7 +109,7 @@ public sealed class LocalizationEndpoints : IEndpointModule
                 errors.ToDictionary(e => "ValidationErrors", e => new[] { e }));
         }
 
-        return Results.Ok(new ValidationTestResponse("Validation passed", errors));
+        return Results.Ok(ApiResponse<ValidationTestResponse>.Ok(new ValidationTestResponse("Validation passed", errors), "Validation test completed successfully"));
     }
 
     private static bool IsValidEmail(string email)

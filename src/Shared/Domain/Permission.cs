@@ -1,5 +1,3 @@
-using ModularMonolith.Shared.Domain;
-
 namespace ModularMonolith.Shared.Domain;
 
 /// <summary>

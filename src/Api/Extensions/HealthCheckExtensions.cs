@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using ModularMonolith.Infrastructure.HealthChecks;
-using ModularMonolith.Infrastructure.Data;
-using ModularMonolith.Infrastructure.Cache;
 
 namespace ModularMonolith.Api.Extensions;
 

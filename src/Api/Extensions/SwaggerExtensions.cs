@@ -1,8 +1,5 @@
-using System.Reflection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Globalization;
-using Microsoft.Extensions.Localization;
 using ModularMonolith.Api.Services;
 using Swashbuckle.AspNetCore.Filters;
 
@@ -102,12 +99,12 @@ public static class SwaggerExtensions
             {
                 options.AddServer(new OpenApiServer
                 {
-                    Url = "https://localhost:7001",
+                    Url = "https://localhost:5001",
                     Description = "Development HTTPS Server"
                 });
                 options.AddServer(new OpenApiServer
                 {
-                    Url = "http://localhost:5001",
+                    Url = "http://localhost:5000",
                     Description = "Development HTTP Server"
                 });
             }
@@ -219,6 +216,36 @@ public static class SwaggerExtensions
             - **Multi-Language Support**: Localized responses based on Accept-Language header
             - **Caching**: Redis and In-Memory caching for optimal performance
             - **Monitoring**: Comprehensive health checks and structured logging
+            - **Standardized API Responses**: All endpoints return responses in a consistent format
+            
+            ## Standardized API Response Structure
+            All endpoints return responses wrapped in a standardized format:
+            
+            **Success Response:**
+            ```json
+            {
+              "success": true,
+              "data": { /* actual response data */ },
+              "message": "Operation completed successfully",
+              "timestamp": "2025-10-05T12:34:56Z",
+              "error": null
+            }
+            ```
+            
+            **Error Response:**
+            ```json
+            {
+              "success": false,
+              "data": null,
+              "message": "Error description",
+              "timestamp": "2025-10-05T12:34:56Z",
+              "error": {
+                "code": "ERROR_CODE",
+                "message": "Detailed error message",
+                "type": "NotFound|Validation|Conflict|Unauthorized|Forbidden|Internal"
+              }
+            }
+            ```
             
             ## Authentication
             This API uses JWT Bearer tokens for authentication. To access protected endpoints:

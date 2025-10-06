@@ -1,7 +1,5 @@
 using System.Security.Claims;
 using ModularMonolith.Authentication.Domain.Services;
-using ModularMonolith.Users.Domain;
-using ModularMonolith.Users.Domain.ValueObjects;
 
 namespace ModularMonolith.Api.Middleware;
 

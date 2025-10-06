@@ -8,7 +8,6 @@ using ModularMonolith.Roles.Commands.AssignRoleToUser;
 using ModularMonolith.Roles.Queries.GetRole;
 using ModularMonolith.Roles.Queries.GetRoles;
 using ModularMonolith.Roles.Queries.GetUserRoles;
-using ModularMonolith.Roles.Authorization;
 using ModularMonolith.Roles.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -43,10 +42,8 @@ internal static class RoleEndpoints
             // Check if role management feature is enabled
             if (!await featureManager.IsEnabledAsync("RoleManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<CreateRoleResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             // Validate the command
@@ -60,12 +57,12 @@ internal static class RoleEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => Results.Created($"/api/roles/{success.Id}", success),
+                success => Results.Created($"/api/roles/{success.Id}", ApiResponse<CreateRoleResponse>.Ok(success, "Role created successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.Conflict => Results.Conflict(ApiResponse<CreateRoleResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<CreateRoleResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<CreateRoleResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -73,7 +70,7 @@ internal static class RoleEndpoints
         .WithSummary("Create a new role")
         .WithDescription("Creates a new role with the specified permissions")
         .RequirePermission(Roles.Authorization.RolePermissions.RESOURCE, Roles.Authorization.RolePermissions.Actions.WRITE)
-        .Produces<CreateRoleResponse>(201)
+        .Produces<ApiResponse<CreateRoleResponse>>(201)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -92,10 +89,8 @@ internal static class RoleEndpoints
             // Check if role management feature is enabled
             if (!await featureManager.IsEnabledAsync("RoleManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<GetRoleResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             var query = new GetRoleQuery(id);
@@ -111,12 +106,12 @@ internal static class RoleEndpoints
             var result = await handler.Handle(query, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<GetRoleResponse>.Ok(success, "Role retrieved successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.NotFound => Results.NotFound(ApiResponse<GetRoleResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<GetRoleResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<GetRoleResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -124,7 +119,7 @@ internal static class RoleEndpoints
         .WithSummary("Get role by ID")
         .WithDescription("Retrieves a role by its unique identifier with permission details")
         .RequirePermission(Roles.Authorization.RolePermissions.RESOURCE, Roles.Authorization.RolePermissions.Actions.READ)
-        .Produces<GetRoleResponse>(200)
+        .Produces<ApiResponse<GetRoleResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -147,10 +142,8 @@ internal static class RoleEndpoints
             // Check if role management feature is enabled
             if (!await featureManager.IsEnabledAsync("RoleManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<GetRolesResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             var query = new GetRolesQuery(nameFilter, permissionResource, permissionAction, pageNumber, pageSize);
@@ -166,11 +159,11 @@ internal static class RoleEndpoints
             var result = await handler.Handle(query, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<GetRolesResponse>.Ok(success, "Roles retrieved successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<GetRolesResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<GetRolesResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -178,7 +171,7 @@ internal static class RoleEndpoints
         .WithSummary("Get roles with filtering")
         .WithDescription("Retrieves roles with optional filtering and pagination")
         .RequirePermission(Roles.Authorization.RolePermissions.RESOURCE, Roles.Authorization.RolePermissions.Actions.READ)
-        .Produces<GetRolesResponse>(200)
+        .Produces<ApiResponse<GetRolesResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -197,10 +190,8 @@ internal static class RoleEndpoints
             // Check if role management feature is enabled
             if (!await featureManager.IsEnabledAsync("RoleManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<UpdateRoleResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             var commandPermissions = request.Permissions
@@ -219,13 +210,13 @@ internal static class RoleEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<UpdateRoleResponse>.Ok(success, "Role updated successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-                    ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.NotFound => Results.NotFound(ApiResponse<UpdateRoleResponse>.Fail(error.Message, error)),
+                    ErrorType.Conflict => Results.Conflict(ApiResponse<UpdateRoleResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<UpdateRoleResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<UpdateRoleResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -233,7 +224,7 @@ internal static class RoleEndpoints
         .WithSummary("Update role")
         .WithDescription("Updates an existing role with new permissions")
         .RequirePermission(Roles.Authorization.RolePermissions.RESOURCE, Roles.Authorization.RolePermissions.Actions.WRITE)
-        .Produces<UpdateRoleResponse>(200)
+        .Produces<ApiResponse<UpdateRoleResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -253,10 +244,8 @@ internal static class RoleEndpoints
             // Check if role management feature is enabled
             if (!await featureManager.IsEnabledAsync("RoleManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<DeleteRoleResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             var command = new DeleteRoleCommand(id);
@@ -272,12 +261,12 @@ internal static class RoleEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<DeleteRoleResponse>.Ok(success, "Role deleted successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.NotFound => Results.NotFound(ApiResponse<DeleteRoleResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<DeleteRoleResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<DeleteRoleResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -285,7 +274,7 @@ internal static class RoleEndpoints
         .WithSummary("Delete a role")
         .WithDescription("Soft deletes a role by its unique identifier")
         .RequirePermission(Roles.Authorization.RolePermissions.RESOURCE, Roles.Authorization.RolePermissions.Actions.DELETE)
-        .Produces<DeleteRoleResponse>(200)
+        .Produces<ApiResponse<DeleteRoleResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -305,10 +294,8 @@ internal static class RoleEndpoints
             // Check if role management feature is enabled
             if (!await featureManager.IsEnabledAsync("RoleManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<AssignRoleToUserResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             var command = new AssignRoleToUserCommand(userId, roleId);
@@ -324,13 +311,13 @@ internal static class RoleEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<AssignRoleToUserResponse>.Ok(success, "Role assigned to user successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-                    ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.NotFound => Results.NotFound(ApiResponse<AssignRoleToUserResponse>.Fail(error.Message, error)),
+                    ErrorType.Conflict => Results.Conflict(ApiResponse<AssignRoleToUserResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<AssignRoleToUserResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<AssignRoleToUserResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -338,7 +325,7 @@ internal static class RoleEndpoints
         .WithSummary("Assign role to user")
         .WithDescription("Assigns a role to a user")
         .RequirePermission(Roles.Authorization.RolePermissions.RESOURCE, Roles.Authorization.RolePermissions.Actions.ASSIGN)
-        .Produces<AssignRoleToUserResponse>(200)
+        .Produces<ApiResponse<AssignRoleToUserResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -358,10 +345,8 @@ internal static class RoleEndpoints
             // Check if role management feature is enabled
             if (!await featureManager.IsEnabledAsync("RoleManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<GetUserRolesResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             var query = new GetUserRolesQuery(userId);
@@ -377,12 +362,12 @@ internal static class RoleEndpoints
             var result = await handler.Handle(query, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<GetUserRolesResponse>.Ok(success, "User roles retrieved successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.NotFound => Results.NotFound(ApiResponse<GetUserRolesResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<GetUserRolesResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<GetUserRolesResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -390,7 +375,7 @@ internal static class RoleEndpoints
         .WithSummary("Get user roles")
         .WithDescription("Retrieves all roles assigned to a specific user")
         .RequirePermission(Roles.Authorization.RolePermissions.RESOURCE, Roles.Authorization.RolePermissions.Actions.READ)
-        .Produces<GetUserRolesResponse>(200)
+        .Produces<ApiResponse<GetUserRolesResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)

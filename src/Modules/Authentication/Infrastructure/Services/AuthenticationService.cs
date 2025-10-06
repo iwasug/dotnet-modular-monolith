@@ -5,7 +5,6 @@ using ModularMonolith.Authentication.Domain.Services;
 using ModularMonolith.Authentication.Domain.ValueObjects;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Users.Domain;
-using ModularMonolith.Users.Domain.Services;
 using ModularMonolith.Users.Domain.ValueObjects;
 
 namespace ModularMonolith.Authentication.Infrastructure.Services;

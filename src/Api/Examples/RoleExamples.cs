@@ -1,5 +1,4 @@
 using ModularMonolith.Roles.Commands.CreateRole;
-using ModularMonolith.Roles.Commands.UpdateRole;
 using ModularMonolith.Roles.Commands.AssignRoleToUser;
 using ModularMonolith.Roles.Queries.GetRole;
 using ModularMonolith.Roles.Queries.GetRoles;

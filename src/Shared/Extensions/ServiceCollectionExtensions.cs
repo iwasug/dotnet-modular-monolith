@@ -1,6 +1,5 @@
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Shared.Services;
-using ModularMonolith.Shared.Authorization;
 using ModularMonolith.Shared.Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

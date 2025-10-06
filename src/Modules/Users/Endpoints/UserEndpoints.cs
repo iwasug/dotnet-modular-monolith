@@ -5,7 +5,6 @@ using ModularMonolith.Users.Commands.CreateUser;
 using ModularMonolith.Users.Commands.UpdateUser;
 using ModularMonolith.Users.Commands.DeleteUser;
 using ModularMonolith.Users.Queries.GetUser;
-using ModularMonolith.Users.Authorization;
 using ModularMonolith.Users.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -40,10 +39,8 @@ internal static class UserEndpoints
             // Check if user management feature is enabled
             if (!await featureManager.IsEnabledAsync("UserManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<CreateUserResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             // Validate the command
@@ -57,12 +54,12 @@ internal static class UserEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => Results.Created($"/api/users/{success.Id}", success),
+                success => Results.Created($"/api/users/{success.Id}", ApiResponse<CreateUserResponse>.Ok(success, "User created successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.Conflict => Results.Conflict(ApiResponse<CreateUserResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<CreateUserResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<CreateUserResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -70,7 +67,7 @@ internal static class UserEndpoints
         .WithSummary("Create a new user")
         .WithDescription("Creates a new user with the provided information")
         .RequirePermission(Users.Authorization.UserPermissions.RESOURCE, Users.Authorization.UserPermissions.Actions.WRITE)
-        .Produces<CreateUserResponse>(201)
+        .Produces<ApiResponse<CreateUserResponse>>(201)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -89,10 +86,8 @@ internal static class UserEndpoints
             // Check if user management feature is enabled
             if (!await featureManager.IsEnabledAsync("UserManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<GetUserResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             var query = new GetUserQuery(id);
@@ -108,12 +103,12 @@ internal static class UserEndpoints
             var result = await handler.Handle(query, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<GetUserResponse>.Ok(success, "User retrieved successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.NotFound => Results.NotFound(ApiResponse<GetUserResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<GetUserResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<GetUserResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -121,7 +116,7 @@ internal static class UserEndpoints
         .WithSummary("Get user by ID")
         .WithDescription("Retrieves a user by their unique identifier")
         .RequirePermission(Users.Authorization.UserPermissions.RESOURCE, Users.Authorization.UserPermissions.Actions.READ)
-        .Produces<GetUserResponse>(200)
+        .Produces<ApiResponse<GetUserResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -141,10 +136,8 @@ internal static class UserEndpoints
             // Check if user management feature is enabled
             if (!await featureManager.IsEnabledAsync("UserManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<UpdateUserResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             // Ensure route ID matches command ID
@@ -164,13 +157,13 @@ internal static class UserEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<UpdateUserResponse>.Ok(success, "User updated successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-                    ErrorType.Conflict => Results.Conflict(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.NotFound => Results.NotFound(ApiResponse<UpdateUserResponse>.Fail(error.Message, error)),
+                    ErrorType.Conflict => Results.Conflict(ApiResponse<UpdateUserResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<UpdateUserResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<UpdateUserResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -178,7 +171,7 @@ internal static class UserEndpoints
         .WithSummary("Update an existing user")
         .WithDescription("Updates user information by their unique identifier")
         .RequirePermission(Users.Authorization.UserPermissions.RESOURCE, Users.Authorization.UserPermissions.Actions.UPDATE)
-        .Produces<UpdateUserResponse>(200)
+        .Produces<ApiResponse<UpdateUserResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)
@@ -198,10 +191,8 @@ internal static class UserEndpoints
             // Check if user management feature is enabled
             if (!await featureManager.IsEnabledAsync("UserManagement"))
             {
-                return Results.Problem(
-                    detail: localizationService.GetString("FeatureDisabled"),
-                    statusCode: 403,
-                    title: "Feature Disabled");
+                var error = Error.Forbidden("FEATURE_DISABLED", localizationService.GetString("FeatureDisabled"));
+                return Results.Json(ApiResponse<DeleteUserResponse>.Fail(error.Message, error), statusCode: 403);
             }
 
             var command = new DeleteUserCommand(id);
@@ -217,12 +208,12 @@ internal static class UserEndpoints
             var result = await handler.Handle(command, cancellationToken);
 
             return result.Match(
-                success => Results.Ok(success),
+                success => Results.Ok(ApiResponse<DeleteUserResponse>.Ok(success, "User deleted successfully")),
                 error => error.Type switch
                 {
-                    ErrorType.NotFound => Results.NotFound(new { error.Code, error.Message }),
-                    ErrorType.Validation => Results.BadRequest(new { error.Code, error.Message }),
-                    _ => Results.Problem(error.Message, statusCode: 500)
+                    ErrorType.NotFound => Results.NotFound(ApiResponse<DeleteUserResponse>.Fail(error.Message, error)),
+                    ErrorType.Validation => Results.BadRequest(ApiResponse<DeleteUserResponse>.Fail(error.Message, error)),
+                    _ => Results.Json(ApiResponse<DeleteUserResponse>.Fail(error.Message, error), statusCode: 500)
                 }
             );
         })
@@ -230,7 +221,7 @@ internal static class UserEndpoints
         .WithSummary("Delete a user")
         .WithDescription("Soft deletes a user by their unique identifier")
         .RequirePermission(Users.Authorization.UserPermissions.RESOURCE, Users.Authorization.UserPermissions.Actions.DELETE)
-        .Produces<DeleteUserResponse>(200)
+        .Produces<ApiResponse<DeleteUserResponse>>(200)
         .ProducesValidationProblem()
         .Produces(401)
         .Produces(403)

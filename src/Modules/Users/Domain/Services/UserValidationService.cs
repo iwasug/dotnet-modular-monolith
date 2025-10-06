@@ -7,7 +7,7 @@ namespace ModularMonolith.Users.Domain.Services;
 /// <summary>
 /// User validation service implementing business rules
 /// </summary>
-public class UserValidationService : IUserValidationService
+internal sealed class UserValidationService : IUserValidationService
 {
     private readonly IUserRepository _userRepository;
     
@@ -26,15 +26,15 @@ public class UserValidationService : IUserValidationService
     /// </summary>
     public async Task<Result> ValidateEmailAvailabilityAsync(Email email, UserId? excludeUserId = null, CancellationToken cancellationToken = default)
     {
-        var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
+        User? existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
         
-        if (existingUser == null)
+        if (existingUser is null)
         {
             return Result.Success();
         }
 
         // If we're excluding a specific user (for updates), check if it's the same user
-        if (excludeUserId != null && existingUser.Id == excludeUserId.Value)
+        if (excludeUserId is not null && existingUser.Id == excludeUserId.Value)
         {
             return Result.Success();
         }
@@ -76,7 +76,7 @@ public class UserValidationService : IUserValidationService
     /// </summary>
     public Result ValidateUserProfile(UserProfile profile)
     {
-        if (profile == null)
+        if (profile is null)
         {
             return Result.Failure(Error.Validation("PROFILE_REQUIRED", "User profile is required"));
         }
@@ -84,7 +84,7 @@ public class UserValidationService : IUserValidationService
         // Additional business rules can be added here
         // For example: checking for inappropriate content, reserved names, etc.
         
-        var forbiddenNames = new[] { "admin", "administrator", "system", "root", "test" };
+        string[] forbiddenNames = new[] { "admin", "administrator", "system", "root", "test" };
         
         if (forbiddenNames.Contains(profile.FirstName.ToLowerInvariant()) || 
             forbiddenNames.Contains(profile.LastName.ToLowerInvariant()))
@@ -100,7 +100,7 @@ public class UserValidationService : IUserValidationService
     /// </summary>
     public Result ValidateUserDeactivation(User user)
     {
-        if (user == null)
+        if (user is null)
         {
             return Result.Failure(Error.Validation("USER_REQUIRED", "User is required"));
         }

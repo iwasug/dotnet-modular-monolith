@@ -1,5 +1,4 @@
 using ModularMonolith.Api.Services;
-using Microsoft.AspNetCore.Authorization;
 
 namespace ModularMonolith.Api.Endpoints;
 

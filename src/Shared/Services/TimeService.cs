@@ -5,7 +5,7 @@ namespace ModularMonolith.Shared.Services;
 /// <summary>
 /// Default implementation of ITimeService using system time
 /// </summary>
-public class TimeService : ITimeService
+internal sealed class TimeService : ITimeService
 {
     public DateTime UtcNow => DateTime.UtcNow;
     

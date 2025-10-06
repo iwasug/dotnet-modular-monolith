@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
-using ModularMonolith.Api.Authorization.Attributes;
-
 namespace ModularMonolith.Api.Extensions;
 
 /// <summary>

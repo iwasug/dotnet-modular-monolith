@@ -11,7 +11,7 @@ namespace ModularMonolith.Shared.Services;
 /// <summary>
 /// Email service implementation using MailKit and MimeKit
 /// </summary>
-public class EmailService : IEmailService
+internal sealed class EmailService : IEmailService
 {
     private readonly EmailOptions _emailOptions;
     private readonly ILogger<EmailService> _logger;

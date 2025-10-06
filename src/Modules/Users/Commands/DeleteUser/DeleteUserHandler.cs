@@ -10,7 +10,7 @@ namespace ModularMonolith.Users.Commands.DeleteUser;
 /// <summary>
 /// Handler for DeleteUserCommand with localized error messages
 /// </summary>
-public class DeleteUserHandler : ICommandHandler<DeleteUserCommand, DeleteUserResponse>
+internal sealed class DeleteUserHandler : ICommandHandler<DeleteUserCommand, DeleteUserResponse>
 {
     private readonly ILogger<DeleteUserHandler> _logger;
     private readonly IUserRepository _userRepository;

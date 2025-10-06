@@ -25,7 +25,7 @@ public sealed class JsonLocalizationTestEndpoints : IEndpointModule
 
         // Test validation messages
         localizationTest.MapGet("/validation-messages", TestValidationMessages)
-            .WithName("TestValidationMessages")
+            .WithName("GetValidationMessages")
             .WithSummary("Test validation message localization")
             .WithDescription("Tests validation message retrieval in different languages")
             .Produces<ValidationMessageTestResponse>();

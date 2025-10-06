@@ -84,6 +84,9 @@ public class DatabaseMigrationService : IHostedService
                 {
                     _logger.LogWarning("Database schema validation failed - some issues detected");
                 }
+
+                // Seed initial data after migrations
+                await SeedDataAsync(scope, cancellationToken);
             }
             else
             {
@@ -101,6 +104,9 @@ public class DatabaseMigrationService : IHostedService
                 {
                     _logger.LogWarning("Database schema validation failed - some issues detected");
                 }
+
+                // Seed initial data if needed
+                await SeedDataAsync(scope, cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -119,5 +125,22 @@ public class DatabaseMigrationService : IHostedService
     {
         _logger.LogInformation("Database migration service stopped");
         return Task.CompletedTask;
+    }
+
+    private async Task SeedDataAsync(IServiceScope scope, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var seederLogger = scope.ServiceProvider.GetRequiredService<ILogger<DataSeeder>>();
+            var seeder = new DataSeeder(dbContext, seederLogger);
+            
+            await seeder.SeedAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while seeding data");
+            // Don't throw - seeding failure shouldn't prevent application startup
+        }
     }
 }

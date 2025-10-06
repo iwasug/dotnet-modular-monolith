@@ -1,6 +1,5 @@
 using FluentValidation;
 using ModularMonolith.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ModularMonolith.Shared.Extensions;
 

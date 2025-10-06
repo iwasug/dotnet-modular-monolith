@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using ModularMonolith.Shared.Extensions;
 using ModularMonolith.Users.Authorization;
 using ModularMonolith.Roles.Authorization;
 using ModularMonolith.Authentication.Authorization;

@@ -10,7 +10,7 @@ namespace ModularMonolith.Users.Commands.UpdateUser;
 /// <summary>
 /// Handler for UpdateUserCommand with localized error messages
 /// </summary>
-public class UpdateUserHandler : ICommandHandler<UpdateUserCommand, UpdateUserResponse>
+internal sealed class UpdateUserHandler : ICommandHandler<UpdateUserCommand, UpdateUserResponse>
 {
     private readonly ILogger<UpdateUserHandler> _logger;
     private readonly IUserRepository _userRepository;
@@ -45,10 +45,10 @@ public class UpdateUserHandler : ICommandHandler<UpdateUserCommand, UpdateUserRe
         try
         {
             // Get existing user
-            var userId = UserId.From(command.Id);
-            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+            UserId userId = UserId.From(command.Id);
+            User? user = await _userRepository.GetByIdAsync(userId, cancellationToken);
             
-            if (user == null)
+            if (user is null)
             {
                 _logger.LogWarning("User with ID {UserId} not found", command.Id);
                 return Result<UpdateUserResponse>.Failure(
@@ -56,11 +56,11 @@ public class UpdateUserHandler : ICommandHandler<UpdateUserCommand, UpdateUserRe
             }
 
             // Check if email is being changed and if new email already exists
-            var newEmail = Email.From(command.Email);
+            Email newEmail = Email.From(command.Email);
             if (user.Email != newEmail)
             {
-                var existingUserWithEmail = await _userRepository.GetByEmailAsync(newEmail, cancellationToken);
-                if (existingUserWithEmail != null && existingUserWithEmail.Id != command.Id)
+                User? existingUserWithEmail = await _userRepository.GetByEmailAsync(newEmail, cancellationToken);
+                if (existingUserWithEmail is not null && existingUserWithEmail.Id != command.Id)
                 {
                     _logger.LogWarning("Email {Email} already exists for another user", command.Email);
                     return Result<UpdateUserResponse>.Failure(
@@ -69,7 +69,7 @@ public class UpdateUserHandler : ICommandHandler<UpdateUserCommand, UpdateUserRe
             }
 
             // Update user profile
-            var newProfile = UserProfile.Create(command.FirstName, command.LastName);
+            UserProfile newProfile = UserProfile.Create(command.FirstName, command.LastName);
             user.UpdateProfile(newProfile);
 
             // Update repository

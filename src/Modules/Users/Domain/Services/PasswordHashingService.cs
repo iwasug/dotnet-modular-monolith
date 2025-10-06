@@ -1,4 +1,3 @@
-using BCrypt.Net;
 using ModularMonolith.Users.Domain.ValueObjects;
 
 namespace ModularMonolith.Users.Domain.Services;
@@ -6,7 +5,7 @@ namespace ModularMonolith.Users.Domain.Services;
 /// <summary>
 /// Password hashing service using BCrypt
 /// </summary>
-public class PasswordHashingService : IPasswordHashingService
+internal sealed class PasswordHashingService : IPasswordHashingService
 {
     private const int WorkFactor = 12; // BCrypt work factor for security vs performance balance
 
@@ -20,7 +19,7 @@ public class PasswordHashingService : IPasswordHashingService
             throw new ArgumentException("Password cannot be null or empty", nameof(plainTextPassword));
         }
 
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(plainTextPassword, WorkFactor);
+        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(plainTextPassword, WorkFactor);
         return HashedPassword.From(hashedPassword);
     }
 
@@ -34,7 +33,7 @@ public class PasswordHashingService : IPasswordHashingService
             return false;
         }
 
-        if (hashedPassword == null)
+        if (hashedPassword is null)
         {
             return false;
         }

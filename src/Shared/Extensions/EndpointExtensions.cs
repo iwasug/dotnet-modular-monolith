@@ -1,6 +1,5 @@
 using ModularMonolith.Shared.Interfaces;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace ModularMonolith.Shared.Extensions;

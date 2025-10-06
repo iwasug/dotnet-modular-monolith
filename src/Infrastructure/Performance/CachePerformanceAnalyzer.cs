@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace ModularMonolith.Infrastructure.Performance;
 

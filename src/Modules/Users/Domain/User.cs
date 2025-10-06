@@ -1,5 +1,4 @@
 using ModularMonolith.Shared.Domain;
-using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Users.Domain.ValueObjects;
 
 namespace ModularMonolith.Users.Domain;

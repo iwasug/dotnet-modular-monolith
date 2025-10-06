@@ -210,7 +210,7 @@ public abstract class DynamicDbContextBase : DbContext
         var entityType = GetRegisteredEntityTypes()
             .FirstOrDefault(t => t.Name.Equals(entityTypeName, StringComparison.OrdinalIgnoreCase));
 
-        if (entityType == null)
+        if (entityType is null)
             return null;
 
         var method = typeof(DynamicDbContextBase).GetMethod(nameof(Set))!.MakeGenericMethod(entityType);
@@ -421,6 +421,10 @@ public class ApplicationDbContext : DynamicDbContextBase
         
         // Complete setup for dynamic DbContext - one line does everything!
         SetupDynamicDbContext(modelBuilder);
+        
+        // Seed initial data - temporarily disabled due to value object complexity
+        // Use DataSeeder.SeedAsync() after migrations instead
+        // Configurations.SeedDataConfiguration.SeedData(modelBuilder);
         
         // In development, you can enable detailed logging by uncommenting the line below:
         // ApplyConfigurationsWithLogging(modelBuilder, message => System.Diagnostics.Debug.WriteLine($"[EF Configuration] {message}"));

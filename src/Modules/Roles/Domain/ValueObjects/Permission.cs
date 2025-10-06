@@ -77,7 +77,7 @@ public sealed class Permission : ValueObject
     /// </summary>
     public bool Matches(Permission other)
     {
-        if (other == null) return false;
+        if (other is null) return false;
 
         return MatchesComponent(Resource, other.Resource) &&
                MatchesComponent(Action, other.Action) &&

@@ -1,7 +1,6 @@
 using ModularMonolith.Shared.Common;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Roles.Domain;
-using ModularMonolith.Roles.Domain.ValueObjects;
 using ModularMonolith.Roles.Services;
 using Microsoft.Extensions.Logging;
 

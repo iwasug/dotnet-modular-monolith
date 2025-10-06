@@ -1,7 +1,6 @@
 using ModularMonolith.Shared.Common;
 using ModularMonolith.Shared.Interfaces;
 using ModularMonolith.Roles.Domain;
-using ModularMonolith.Roles.Domain.ValueObjects;
 using ModularMonolith.Roles.Services;
 using Microsoft.Extensions.Logging;
 
@@ -45,10 +44,10 @@ public sealed class GetRolesHandler : IQueryHandler<GetRolesQuery, GetRolesRespo
         try
         {
             // Get all roles (soft delete filter is applied automatically by EF Core global query filter)
-            var allRoles = await _roleRepository.GetAllAsync(cancellationToken);
+            IReadOnlyList<Role> allRoles = await _roleRepository.GetAllAsync(cancellationToken);
 
             // Apply filters in memory (in production, this should be done at the database level)
-            var filteredRoles = allRoles.AsEnumerable();
+            IEnumerable<Role> filteredRoles = allRoles.AsEnumerable();
 
             // Apply name filter
             if (!string.IsNullOrWhiteSpace(query.NameFilter))
@@ -72,17 +71,17 @@ public sealed class GetRolesHandler : IQueryHandler<GetRolesQuery, GetRolesRespo
                         p.Action.Contains(query.PermissionAction, StringComparison.OrdinalIgnoreCase)));
             }
 
-            var totalCount = filteredRoles.Count();
-            var totalPages = (int)Math.Ceiling((double)totalCount / query.PageSize);
+            int totalCount = filteredRoles.Count();
+            int totalPages = (int)Math.Ceiling((double)totalCount / query.PageSize);
 
             // Apply pagination
-            var pagedRoles = filteredRoles
+            List<Role> pagedRoles = filteredRoles
                 .Skip((query.PageNumber - 1) * query.PageSize)
                 .Take(query.PageSize)
                 .ToList();
 
             // Map to DTOs
-            var roleDtos = pagedRoles.Select(role => new RoleDto(
+            List<RoleDto> roleDtos = pagedRoles.Select(role => new RoleDto(
                 role.Id,
                 role.Name.Value,
                 role.Description,

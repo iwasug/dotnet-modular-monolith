@@ -1,4 +1,3 @@
-using System.Globalization;
 using ModularMonolith.Shared.Services;
 
 namespace ModularMonolith.Api.Services;

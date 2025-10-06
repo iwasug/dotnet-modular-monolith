@@ -10,7 +10,7 @@ namespace ModularMonolith.Users.Commands.CreateUser;
 /// <summary>
 /// Handler for CreateUserCommand following the 3-file pattern with localized error messages
 /// </summary>
-public class CreateUserHandler : ICommandHandler<CreateUserCommand, CreateUserResponse>
+internal sealed class CreateUserHandler : ICommandHandler<CreateUserCommand, CreateUserResponse>
 {
     private readonly ILogger<CreateUserHandler> _logger;
     private readonly IUserRepository _userRepository;
@@ -48,9 +48,9 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, CreateUserRe
         try
         {
             // Check if user already exists
-            var email = Email.From(command.Email);
-            var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
-            if (existingUser != null)
+            Email email = Email.From(command.Email);
+            User? existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
+            if (existingUser is not null)
             {
                 _logger.LogWarning("User with email {Email} already exists", command.Email);
                 return Result<CreateUserResponse>.Failure(
@@ -58,7 +58,7 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, CreateUserRe
             }
 
             // Hash password
-            var hashedPassword = _passwordHashingService.HashPassword(command.Password);
+            HashedPassword hashedPassword = _passwordHashingService.HashPassword(command.Password);
 
             // Create user entity
             var user = User.Create(command.Email, hashedPassword, command.FirstName, command.LastName);

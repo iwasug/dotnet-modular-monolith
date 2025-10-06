@@ -30,7 +30,7 @@ public abstract class ValueObject : IEquatable<ValueObject>
     public override int GetHashCode()
     {
         return GetEqualityComponents()
-            .Where(x => x != null)
+            .Where(x => x is not null)
             .Aggregate(1, (current, obj) => current * 23 + obj!.GetHashCode());
     }
 

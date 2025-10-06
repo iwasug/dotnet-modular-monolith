@@ -1,6 +1,5 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.Extensions.Localization;
 
 namespace ModularMonolith.Api.Extensions;
 

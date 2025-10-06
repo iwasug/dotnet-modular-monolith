@@ -45,8 +45,8 @@ public sealed class CreateRoleHandler : ICommandHandler<CreateRoleCommand, Creat
         try
         {
             // Check if role already exists
-            var roleName = RoleName.From(command.Name);
-            var existingRole = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
+            RoleName roleName = RoleName.From(command.Name);
+            Role? existingRole = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
             if (existingRole is not null)
             {
                 _logger.LogWarning("Role with name {RoleName} already exists", command.Name);
@@ -60,7 +60,7 @@ public sealed class CreateRoleHandler : ICommandHandler<CreateRoleCommand, Creat
             // Add permissions if provided
             if (command.Permissions is not null && command.Permissions.Count > 0)
             {
-                var permissions = command.Permissions
+                List<ModularMonolith.Shared.Domain.Permission> permissions = command.Permissions
                     .Select(p => ModularMonolith.Shared.Domain.Permission.Create(p.Resource, p.Action, p.Scope))
                     .ToList();
                 

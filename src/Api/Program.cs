@@ -122,6 +122,9 @@ new JsonLocalizationTestEndpoints().MapEndpoints(app);
 // Map modular localization test endpoints
 new ModularLocalizationTestEndpoints().MapEndpoints(app);
 
+// Map API response example endpoints
+new ApiResponseExampleEndpoints().MapEndpoints(app);
+
 app.MapControllers();
 
 try
