@@ -28,10 +28,12 @@ A production-ready modular monolith implementing enterprise patterns with comple
 
 **Key Highlights:**
 - 🏗️ **Modular Architecture** - Clean boundaries with DDD and CQRS
+- 🎛️ **Feature Management** - Enable/disable modules via configuration at runtime
 - 🔐 **Security First** - JWT authentication with refresh tokens and granular permissions
-- 🌍 **Multi-Language** - 9 languages supported with modular localization
+- 🌍 **Multi-Language** - 9 languages with Swagger dropdown selector
 - 🚀 **Production Ready** - Docker support, health checks, monitoring, and caching
 - 📝 **Type-Safe** - Permission constants system and comprehensive validation
+- 📚 **Smart API Docs** - Dynamic Swagger with auto-detected server URLs
 
 ## Quick Start
 
@@ -92,12 +94,13 @@ src/
 | **Authorization** | Resource-action-scope permission model with type-safe constants |
 | **User Management** | CRUD operations with profile management and role assignment |
 | **Role Management** | Dynamic roles with granular permission assignments |
+| **Module Management** | Enable/disable modules via feature flags at runtime |
 | **Localization** | 9 languages with modular JSON resources |
 | **Caching** | Redis distributed cache with in-memory fallback |
 | **Validation** | FluentValidation with localized error messages |
 | **Logging** | Structured logging with Serilog and correlation IDs |
 | **Health Checks** | Database, cache, and API monitoring |
-| **API Docs** | Complete OpenAPI/Swagger documentation |
+| **API Docs** | Complete OpenAPI/Swagger with dynamic server detection |
 
 ### Supported Languages
 
@@ -166,6 +169,37 @@ Modules/ModuleName/
 
 ## API Documentation
 
+### Swagger UI Features
+
+The API includes a comprehensive Swagger UI with enhanced features:
+
+**🌍 Language Selection Dropdown**
+- Accept-Language header with dropdown selector
+- Supported languages: en-US, es-ES, fr-FR, de-DE, id-ID
+- Automatic localization of error messages and responses
+
+**🔧 Dynamic Server URLs**
+- Automatically detects and displays the current server URL
+- Works with localhost, custom domains, and reverse proxies
+- No manual configuration needed per environment
+
+**🔒 JWT Authentication**
+- Built-in "Authorize" button for token management
+- Persistent authorization across page refreshes
+- Automatic Bearer token header injection
+
+**Access Swagger UI:**
+```bash
+# Local Development
+https://localhost:7000/api-docs
+
+# Docker
+http://localhost:8080/api-docs
+
+# Production
+https://your-domain.com/api-docs
+```
+
 ### Authentication Endpoints
 
 ```
@@ -228,6 +262,8 @@ curl http://localhost:8080/api/users/123 \
   -H "Accept-Language: es-ES"
 ```
 
+> **Tip:** In Swagger UI, use the Accept-Language dropdown to easily select your preferred language without manually typing headers.
+
 ## Configuration
 
 ### Environment Variables
@@ -249,11 +285,73 @@ Jwt__RefreshTokenExpirationDays=7
 
 # Logging
 Serilog__MinimumLevel="Information"
+
+# Module Feature Flags
+FeatureManagement__Modules__Users="true"
+FeatureManagement__Modules__Roles="true"
+FeatureManagement__Modules__Authentication="true"
 ```
 
 ### Central Package Management
 
 Uses `Directory.Packages.props` for centralized NuGet version management across all projects.
+
+### Module Feature Management
+
+Control which modules are active without code changes using feature flags:
+
+```json
+{
+  "FeatureManagement": {
+    "Modules": {
+      "Users": true,
+      "Roles": true,
+      "Authentication": true
+    }
+  }
+}
+```
+
+**Benefits:**
+- **Runtime Control** - Enable/disable modules per environment without redeployment
+- **Clean Swagger** - Disabled modules don't appear in API documentation
+- **No Side Effects** - Services and endpoints are not registered for disabled modules
+- **Environment-Specific** - Different configurations per environment (Development, Staging, Production)
+
+**Usage Examples:**
+
+```bash
+# Development - All modules enabled
+# appsettings.Development.json
+"Modules": {
+  "Users": true,
+  "Roles": true,
+  "Authentication": true
+}
+
+# Production - Disable user registration
+# appsettings.Production.json
+"Modules": {
+  "Users": false,  # No user endpoints in Swagger or API
+  "Roles": true,
+  "Authentication": true
+}
+```
+
+**Implementation:**
+
+Modules are registered conditionally in `Program.cs`:
+```csharp
+builder.Services.AddModuleWithFeature<UsersModule>(builder.Configuration, "Users");
+builder.Services.AddModuleWithFeature<RolesModule>(builder.Configuration, "Roles");
+
+// Endpoints are also conditional
+app.MapModuleEndpointsWithFeature(new Dictionary<Type, string>
+{
+    { typeof(UsersModule), "Users" },
+    { typeof(RolesModule), "Roles" }
+});
+```
 
 ## Deployment
 
