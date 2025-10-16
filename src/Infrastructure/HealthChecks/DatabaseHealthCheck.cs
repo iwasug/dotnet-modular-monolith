@@ -7,37 +7,30 @@ namespace ModularMonolith.Infrastructure.HealthChecks;
 /// <summary>
 /// Health check for database connectivity and migration status
 /// </summary>
-public class DatabaseHealthCheck : IHealthCheck
+public class DatabaseHealthCheck(ApplicationDbContext context) : IHealthCheck
 {
-    private readonly ApplicationDbContext _context;
-
-    public DatabaseHealthCheck(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<HealthCheckResult> CheckHealthAsync(
-        HealthCheckContext context, 
+        HealthCheckContext context1, 
         CancellationToken cancellationToken = default)
     {
         try
         {
             // Check database connectivity
-            var canConnect = await _context.Database.CanConnectAsync(cancellationToken);
+            var canConnect = await context.Database.CanConnectAsync(cancellationToken);
             if (!canConnect)
             {
                 return HealthCheckResult.Unhealthy("Cannot connect to database");
             }
 
             // Check for pending migrations
-            var pendingMigrations = await MigrationValidation.GetPendingMigrationsAsync(_context, cancellationToken);
-            var appliedMigrations = await MigrationValidation.GetAppliedMigrationsAsync(_context, cancellationToken);
+            var pendingMigrations = await MigrationValidation.GetPendingMigrationsAsync(context, cancellationToken);
+            var appliedMigrations = await MigrationValidation.GetAppliedMigrationsAsync(context, cancellationToken);
 
             var data = new Dictionary<string, object>
             {
                 ["AppliedMigrations"] = appliedMigrations.Count(),
                 ["PendingMigrations"] = pendingMigrations.Count(),
-                ["DatabaseProvider"] = _context.Database.ProviderName ?? "Unknown"
+                ["DatabaseProvider"] = context.Database.ProviderName ?? "Unknown"
             };
 
             if (pendingMigrations.Any())
@@ -50,7 +43,7 @@ public class DatabaseHealthCheck : IHealthCheck
 
             // Perform basic schema validation
             var isSchemaValid = await MigrationValidation.ValidateDatabaseSchemaAsync(
-                _context, 
+                context, 
                 Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance, 
                 cancellationToken);
 

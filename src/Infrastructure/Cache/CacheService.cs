@@ -9,27 +9,18 @@ namespace ModularMonolith.Infrastructure.Cache;
 /// <summary>
 /// Cache service implementation with support for both Redis and In-Memory providers
 /// </summary>
-internal sealed class CacheService : ICacheService
+internal sealed class CacheService(
+    IDistributedCache distributedCache,
+    IOptions<CacheOptions> options,
+    ILogger<CacheService> logger)
+    : ICacheService
 {
-    private readonly IDistributedCache _distributedCache;
-    private readonly ILogger<CacheService> _logger;
-    private readonly CacheOptions _options;
-    private readonly JsonSerializerOptions _jsonOptions;
-
-    public CacheService(
-        IDistributedCache distributedCache,
-        IOptions<CacheOptions> options,
-        ILogger<CacheService> logger)
+    private readonly CacheOptions _options = options.Value;
+    private readonly JsonSerializerOptions _jsonOptions = new()
     {
-        _distributedCache = distributedCache;
-        _options = options.Value;
-        _logger = logger;
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
-        };
-    }
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false
+    };
 
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
     {
@@ -37,20 +28,20 @@ internal sealed class CacheService : ICacheService
 
         try
         {
-            var cachedValue = await _distributedCache.GetStringAsync(key, cancellationToken);
+            var cachedValue = await distributedCache.GetStringAsync(key, cancellationToken);
             
             if (cachedValue is null)
             {
-                _logger.LogDebug("Cache miss for key: {Key}", key);
+                logger.LogDebug("Cache miss for key: {Key}", key);
                 return default;
             }
 
-            _logger.LogDebug("Cache hit for key: {Key}", key);
+            logger.LogDebug("Cache hit for key: {Key}", key);
             return JsonSerializer.Deserialize<T>(cachedValue, _jsonOptions);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving cache entry for key: {Key}", key);
+            logger.LogError(ex, "Error retrieving cache entry for key: {Key}", key);
             return default;
         }
     }
@@ -68,13 +59,13 @@ internal sealed class CacheService : ICacheService
                 AbsoluteExpirationRelativeToNow = expiration ?? _options.DefaultExpiration
             };
 
-            await _distributedCache.SetStringAsync(key, serializedValue, options, cancellationToken);
-            _logger.LogDebug("Cache entry set for key: {Key} with expiration: {Expiration}", 
+            await distributedCache.SetStringAsync(key, serializedValue, options, cancellationToken);
+            logger.LogDebug("Cache entry set for key: {Key} with expiration: {Expiration}", 
                 key, options.AbsoluteExpirationRelativeToNow);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error setting cache entry for key: {Key}", key);
+            logger.LogError(ex, "Error setting cache entry for key: {Key}", key);
             throw;
         }
     }
@@ -85,12 +76,12 @@ internal sealed class CacheService : ICacheService
 
         try
         {
-            await _distributedCache.RemoveAsync(key, cancellationToken);
-            _logger.LogDebug("Cache entry removed for key: {Key}", key);
+            await distributedCache.RemoveAsync(key, cancellationToken);
+            logger.LogDebug("Cache entry removed for key: {Key}", key);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error removing cache entry for key: {Key}", key);
+            logger.LogError(ex, "Error removing cache entry for key: {Key}", key);
             throw;
         }
     }
@@ -103,7 +94,7 @@ internal sealed class CacheService : ICacheService
         {
             // For distributed cache, we need to implement pattern-based removal
             // This is a simplified implementation - in production, you might want to use Redis-specific commands
-            _logger.LogWarning("Pattern-based cache removal is not fully supported with IDistributedCache. Pattern: {Pattern}", pattern);
+            logger.LogWarning("Pattern-based cache removal is not fully supported with IDistributedCache. Pattern: {Pattern}", pattern);
             
             // Note: This is a limitation of IDistributedCache interface
             // For full Redis pattern support, you would need to use IDatabase directly
@@ -111,7 +102,7 @@ internal sealed class CacheService : ICacheService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error removing cache entries by pattern: {Pattern}", pattern);
+            logger.LogError(ex, "Error removing cache entries by pattern: {Pattern}", pattern);
             throw;
         }
     }
@@ -124,7 +115,7 @@ internal sealed class CacheService : ICacheService
         {
             // For distributed cache, we need to implement tag-based removal
             // This is a simplified implementation - in production, you might want to use Redis-specific commands
-            _logger.LogWarning("Tag-based cache removal is not fully supported with IDistributedCache. Tag: {Tag}", tag);
+            logger.LogWarning("Tag-based cache removal is not fully supported with IDistributedCache. Tag: {Tag}", tag);
             
             // Note: This is a limitation of IDistributedCache interface
             // For full Redis tag support, you would need to use IDatabase directly or implement a tag tracking system
@@ -132,7 +123,7 @@ internal sealed class CacheService : ICacheService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error removing cache entries by tag: {Tag}", tag);
+            logger.LogError(ex, "Error removing cache entries by tag: {Tag}", tag);
             throw;
         }
     }
@@ -143,15 +134,15 @@ internal sealed class CacheService : ICacheService
 
         try
         {
-            var cachedValue = await _distributedCache.GetStringAsync(key, cancellationToken);
+            var cachedValue = await distributedCache.GetStringAsync(key, cancellationToken);
             var exists = cachedValue is not null;
             
-            _logger.LogDebug("Cache key existence check for {Key}: {Exists}", key, exists);
+            logger.LogDebug("Cache key existence check for {Key}: {Exists}", key, exists);
             return exists;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking cache key existence: {Key}", key);
+            logger.LogError(ex, "Error checking cache key existence: {Key}", key);
             return false;
         }
     }

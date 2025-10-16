@@ -5,19 +5,14 @@ namespace ModularMonolith.Users.Services;
 /// <summary>
 /// Implementation of localization service for the Users module
 /// </summary>
-public sealed class UserLocalizationService : IUserLocalizationService
+public sealed class UserLocalizationService(IModularLocalizationService modularLocalizationService)
+    : IUserLocalizationService
 {
-    private readonly IModularLocalizationService _modularLocalizationService;
     private const string ModuleName = "Users";
-
-    public UserLocalizationService(IModularLocalizationService modularLocalizationService)
-    {
-        _modularLocalizationService = modularLocalizationService;
-    }
 
     public string GetString(string key, string? culture = null)
     {
-        return _modularLocalizationService.GetModuleString(ModuleName, key, culture);
+        return modularLocalizationService.GetModuleString(ModuleName, key, culture);
     }
 
     public string GetString(string key, params object[] args)

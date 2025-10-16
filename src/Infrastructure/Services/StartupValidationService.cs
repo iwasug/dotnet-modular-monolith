@@ -12,29 +12,19 @@ namespace ModularMonolith.Infrastructure.Services;
 /// <summary>
 /// Service that validates system readiness at startup
 /// </summary>
-public sealed class StartupValidationService : IHostedService
+public sealed class StartupValidationService(
+    IServiceProvider serviceProvider,
+    ILogger<StartupValidationService> logger,
+    IHostApplicationLifetime applicationLifetime)
+    : IHostedService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<StartupValidationService> _logger;
-    private readonly IHostApplicationLifetime _applicationLifetime;
-
-    public StartupValidationService(
-        IServiceProvider serviceProvider,
-        ILogger<StartupValidationService> logger,
-        IHostApplicationLifetime applicationLifetime)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-        _applicationLifetime = applicationLifetime;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting application validation");
+        logger.LogInformation("Starting application validation");
 
         try
         {
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = serviceProvider.CreateScope();
             
             // Validate configuration
             ValidateConfiguration(scope.ServiceProvider);
@@ -51,25 +41,25 @@ public sealed class StartupValidationService : IHostedService
             // Log configuration summary
             LogConfigurationSummary(scope.ServiceProvider);
 
-            _logger.LogInformation("Application validation completed successfully");
+            logger.LogInformation("Application validation completed successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogCritical(ex, "Application validation failed - shutting down");
-            _applicationLifetime.StopApplication();
+            logger.LogCritical(ex, "Application validation failed - shutting down");
+            applicationLifetime.StopApplication();
             throw;
         }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Startup validation service is stopping");
+        logger.LogInformation("Startup validation service is stopping");
         return Task.CompletedTask;
     }
 
     private void ValidateConfiguration(IServiceProvider serviceProvider)
     {
-        _logger.LogDebug("Validating configuration");
+        logger.LogDebug("Validating configuration");
         
         var configValidator = serviceProvider.GetRequiredService<ConfigurationValidator>();
         var validationResult = configValidator.ValidateConfiguration();
@@ -79,12 +69,12 @@ public sealed class StartupValidationService : IHostedService
             throw new InvalidOperationException($"Configuration validation failed: {validationResult.ErrorMessage}");
         }
         
-        _logger.LogDebug("Configuration validation passed");
+        logger.LogDebug("Configuration validation passed");
     }
 
     private async Task ValidateDatabase(IServiceProvider serviceProvider, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Validating database connectivity");
+        logger.LogDebug("Validating database connectivity");
         
         try
         {
@@ -101,24 +91,24 @@ public sealed class StartupValidationService : IHostedService
             var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
             if (pendingMigrations.Any())
             {
-                _logger.LogWarning("Database has {Count} pending migrations: {Migrations}", 
+                logger.LogWarning("Database has {Count} pending migrations: {Migrations}", 
                     pendingMigrations.Count(), string.Join(", ", pendingMigrations));
             }
             
             // Test a simple query
             var userCount = await dbContext.Users.CountAsync(cancellationToken);
-            _logger.LogDebug("Database connectivity validated - Users table has {Count} records", userCount);
+            logger.LogDebug("Database connectivity validated - Users table has {Count} records", userCount);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Database validation failed");
+            logger.LogError(ex, "Database validation failed");
             throw new InvalidOperationException("Database validation failed", ex);
         }
     }
 
     private async Task ValidateCache(IServiceProvider serviceProvider, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Validating cache connectivity");
+        logger.LogDebug("Validating cache connectivity");
         
         try
         {
@@ -139,18 +129,18 @@ public sealed class StartupValidationService : IHostedService
             // Clean up test key
             await cacheService.RemoveAsync(testKey, cancellationToken);
             
-            _logger.LogDebug("Cache connectivity validated successfully");
+            logger.LogDebug("Cache connectivity validated successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Cache validation failed");
+            logger.LogError(ex, "Cache validation failed");
             throw new InvalidOperationException("Cache validation failed", ex);
         }
     }
 
     private void ValidateServiceRegistrations(IServiceProvider serviceProvider)
     {
-        _logger.LogDebug("Validating service registrations");
+        logger.LogDebug("Validating service registrations");
         
         var requiredServices = new[]
         {
@@ -174,7 +164,7 @@ public sealed class StartupValidationService : IHostedService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to resolve service {ServiceType}", serviceType.Name);
+                logger.LogError(ex, "Failed to resolve service {ServiceType}", serviceType.Name);
                 missingServices.Add(serviceType.Name);
             }
         }
@@ -184,7 +174,7 @@ public sealed class StartupValidationService : IHostedService
             throw new InvalidOperationException($"Required services are not registered: {string.Join(", ", missingServices)}");
         }
         
-        _logger.LogDebug("Service registration validation passed");
+        logger.LogDebug("Service registration validation passed");
     }
 
     private void LogConfigurationSummary(IServiceProvider serviceProvider)
@@ -194,19 +184,19 @@ public sealed class StartupValidationService : IHostedService
             var configValidator = serviceProvider.GetRequiredService<ConfigurationValidator>();
             var summary = configValidator.GetConfigurationSummary();
             
-            _logger.LogInformation("Application Configuration Summary:");
-            _logger.LogInformation("  Environment: {Environment}", summary.Environment);
-            _logger.LogInformation("  Database: {DatabaseProvider}", summary.DatabaseProvider);
-            _logger.LogInformation("  Cache: {CacheProvider}", summary.CacheProvider);
-            _logger.LogInformation("  JWT Configured: {JwtConfigured}", summary.JwtConfigured);
-            _logger.LogInformation("  Logging Configured: {LoggingConfigured}", summary.LoggingConfigured);
-            _logger.LogInformation("  CORS Configured: {CorsConfigured}", summary.CorsConfigured);
-            _logger.LogInformation("  Health Checks: {HealthChecksEnabled}", summary.HealthChecksEnabled);
-            _logger.LogInformation("  Swagger: {SwaggerEnabled}", summary.SwaggerEnabled);
+            logger.LogInformation("Application Configuration Summary:");
+            logger.LogInformation("  Environment: {Environment}", summary.Environment);
+            logger.LogInformation("  Database: {DatabaseProvider}", summary.DatabaseProvider);
+            logger.LogInformation("  Cache: {CacheProvider}", summary.CacheProvider);
+            logger.LogInformation("  JWT Configured: {JwtConfigured}", summary.JwtConfigured);
+            logger.LogInformation("  Logging Configured: {LoggingConfigured}", summary.LoggingConfigured);
+            logger.LogInformation("  CORS Configured: {CorsConfigured}", summary.CorsConfigured);
+            logger.LogInformation("  Health Checks: {HealthChecksEnabled}", summary.HealthChecksEnabled);
+            logger.LogInformation("  Swagger: {SwaggerEnabled}", summary.SwaggerEnabled);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to generate configuration summary");
+            logger.LogWarning(ex, "Failed to generate configuration summary");
         }
     }
 }

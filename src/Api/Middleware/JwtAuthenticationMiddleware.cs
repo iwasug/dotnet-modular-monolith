@@ -6,17 +6,8 @@ namespace ModularMonolith.Api.Middleware;
 /// <summary>
 /// JWT authentication middleware for validating tokens and setting up user context
 /// </summary>
-internal sealed class JwtAuthenticationMiddleware
+internal sealed class JwtAuthenticationMiddleware(RequestDelegate next, ILogger<JwtAuthenticationMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<JwtAuthenticationMiddleware> _logger;
-
-    public JwtAuthenticationMiddleware(RequestDelegate next, ILogger<JwtAuthenticationMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-    }
-
     public async Task InvokeAsync(HttpContext context, ITokenService tokenService)
     {
         try
@@ -25,10 +16,10 @@ internal sealed class JwtAuthenticationMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during JWT authentication");
+            logger.LogError(ex, "Error during JWT authentication");
         }
 
-        await _next(context);
+        await next(context);
     }
 
     private void AuthenticateRequest(HttpContext context, ITokenService tokenService)
@@ -36,23 +27,23 @@ internal sealed class JwtAuthenticationMiddleware
         var token = ExtractTokenFromHeader(context);
         if (string.IsNullOrEmpty(token))
         {
-            _logger.LogDebug("No JWT token found in request");
+            logger.LogDebug("No JWT token found in request");
             return;
         }
 
-        using var activity = _logger.BeginScope(new Dictionary<string, object>
+        using var activity = logger.BeginScope(new Dictionary<string, object>
         {
             ["Operation"] = "JwtAuthentication",
             ["Path"] = context.Request.Path,
             ["Method"] = context.Request.Method
         });
 
-        _logger.LogDebug("Validating JWT token");
+        logger.LogDebug("Validating JWT token");
 
         var principal = tokenService.ValidateToken(token);
         if (principal is null)
         {
-            _logger.LogWarning("Invalid JWT token provided");
+            logger.LogWarning("Invalid JWT token provided");
             return;
         }
 
@@ -64,13 +55,13 @@ internal sealed class JwtAuthenticationMiddleware
         if (userId.HasValue)
         {
             context.Items["UserId"] = userId.Value;
-            _logger.LogDebug("Successfully authenticated user {UserId}", userId.Value);
+            logger.LogDebug("Successfully authenticated user {UserId}", userId.Value);
         }
 
         // Extract additional claims for easier access
         ExtractAndSetClaims(context, principal);
 
-        _logger.LogDebug("JWT authentication completed successfully");
+        logger.LogDebug("JWT authentication completed successfully");
     }
 
     private static string? ExtractTokenFromHeader(HttpContext context)

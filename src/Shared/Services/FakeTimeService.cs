@@ -5,15 +5,10 @@ namespace ModularMonolith.Shared.Services;
 /// <summary>
 /// Fake time service for testing purposes
 /// </summary>
-internal sealed class FakeTimeService : ITimeService
+internal sealed class FakeTimeService(DateTime? fixedTime = null) : ITimeService
 {
-    private DateTime _currentTime;
-    
-    public FakeTimeService(DateTime? fixedTime = null)
-    {
-        _currentTime = fixedTime ?? new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
-    }
-    
+    private DateTime _currentTime = fixedTime ?? new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+
     public DateTime UtcNow => _currentTime.Kind == DateTimeKind.Utc 
         ? _currentTime 
         : _currentTime.ToUniversalTime();

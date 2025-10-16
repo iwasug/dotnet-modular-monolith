@@ -7,17 +7,8 @@ namespace ModularMonolith.Infrastructure.Configuration;
 /// <summary>
 /// Service for validating application configuration at startup
 /// </summary>
-public sealed class ConfigurationValidator
+public sealed class ConfigurationValidator(IConfiguration configuration, ILogger<ConfigurationValidator> logger)
 {
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<ConfigurationValidator> _logger;
-
-    public ConfigurationValidator(IConfiguration configuration, ILogger<ConfigurationValidator> logger)
-    {
-        _configuration = configuration;
-        _logger = logger;
-    }
-
     /// <summary>
     /// Validates all critical configuration settings
     /// </summary>
@@ -27,7 +18,7 @@ public sealed class ConfigurationValidator
         
         try
         {
-            _logger.LogInformation("Starting configuration validation");
+            logger.LogInformation("Starting configuration validation");
 
             // Validate database configuration
             ValidateDatabase(errors);
@@ -46,26 +37,26 @@ public sealed class ConfigurationValidator
 
             if (errors.Count == 0)
             {
-                _logger.LogInformation("Configuration validation completed successfully");
+                logger.LogInformation("Configuration validation completed successfully");
                 return ValidationResult.Success!;
             }
             else
             {
                 var errorMessage = $"Configuration validation failed with {errors.Count} errors: {string.Join("; ", errors)}";
-                _logger.LogError("Configuration validation failed: {Errors}", string.Join(", ", errors));
+                logger.LogError("Configuration validation failed: {Errors}", string.Join(", ", errors));
                 return new ValidationResult(errorMessage);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error during configuration validation");
+            logger.LogError(ex, "Unexpected error during configuration validation");
             return new ValidationResult($"Configuration validation failed with exception: {ex.Message}");
         }
     }
 
     private void ValidateDatabase(List<string> errors)
     {
-        var connectionString = _configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
         
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -90,12 +81,12 @@ public sealed class ConfigurationValidator
             errors.Add("Database connection string contains default/weak password");
         }
 
-        _logger.LogDebug("Database configuration validation completed");
+        logger.LogDebug("Database configuration validation completed");
     }
 
     private void ValidateCache(List<string> errors)
     {
-        var cacheProvider = _configuration["Cache:Provider"];
+        var cacheProvider = configuration["Cache:Provider"];
         
         if (string.IsNullOrWhiteSpace(cacheProvider))
         {
@@ -105,13 +96,13 @@ public sealed class ConfigurationValidator
 
         if (cacheProvider.Equals("Redis", StringComparison.OrdinalIgnoreCase))
         {
-            var redisConnectionString = _configuration["Cache:Redis:ConnectionString"];
+            var redisConnectionString = configuration["Cache:Redis:ConnectionString"];
             if (string.IsNullOrWhiteSpace(redisConnectionString))
             {
                 errors.Add("Redis cache provider is selected but connection string is missing");
             }
             
-            var keyPrefix = _configuration["Cache:Redis:KeyPrefix"];
+            var keyPrefix = configuration["Cache:Redis:KeyPrefix"];
             if (string.IsNullOrWhiteSpace(keyPrefix))
             {
                 errors.Add("Redis key prefix is missing - this could cause key conflicts");
@@ -119,7 +110,7 @@ public sealed class ConfigurationValidator
         }
 
         // Validate cache expiration settings
-        var defaultExpirationString = _configuration["Cache:DefaultExpiration"];
+        var defaultExpirationString = configuration["Cache:DefaultExpiration"];
         if (!string.IsNullOrWhiteSpace(defaultExpirationString))
         {
             if (!TimeSpan.TryParse(defaultExpirationString, out var expiration) || expiration <= TimeSpan.Zero)
@@ -128,14 +119,14 @@ public sealed class ConfigurationValidator
             }
         }
 
-        _logger.LogDebug("Cache configuration validation completed");
+        logger.LogDebug("Cache configuration validation completed");
     }
 
     private void ValidateJwt(List<string> errors)
     {
-        var jwtKey = _configuration["Jwt:Key"];
-        var jwtIssuer = _configuration["Jwt:Issuer"];
-        var jwtAudience = _configuration["Jwt:Audience"];
+        var jwtKey = configuration["Jwt:Key"];
+        var jwtIssuer = configuration["Jwt:Issuer"];
+        var jwtAudience = configuration["Jwt:Audience"];
 
         if (string.IsNullOrWhiteSpace(jwtKey))
         {
@@ -161,7 +152,7 @@ public sealed class ConfigurationValidator
         }
 
         // Validate token expiration settings
-        var accessTokenExpirationString = _configuration["Jwt:AccessTokenExpiration"];
+        var accessTokenExpirationString = configuration["Jwt:AccessTokenExpiration"];
         if (!string.IsNullOrWhiteSpace(accessTokenExpirationString))
         {
             if (!TimeSpan.TryParse(accessTokenExpirationString, out var expiration) || expiration <= TimeSpan.Zero)
@@ -174,12 +165,12 @@ public sealed class ConfigurationValidator
             }
         }
 
-        _logger.LogDebug("JWT configuration validation completed");
+        logger.LogDebug("JWT configuration validation completed");
     }
 
     private void ValidateLogging(List<string> errors)
     {
-        var loggingSection = _configuration.GetSection("Serilog");
+        var loggingSection = configuration.GetSection("Serilog");
         
         if (!loggingSection.Exists())
         {
@@ -188,40 +179,40 @@ public sealed class ConfigurationValidator
         }
 
         // Check for minimum log level configuration
-        var minLevel = _configuration["Serilog:MinimumLevel:Default"];
+        var minLevel = configuration["Serilog:MinimumLevel:Default"];
         if (string.IsNullOrWhiteSpace(minLevel))
         {
             errors.Add("Serilog minimum log level is not configured");
         }
 
         // Validate write-to sinks
-        var writeTo = _configuration.GetSection("Serilog:WriteTo");
+        var writeTo = configuration.GetSection("Serilog:WriteTo");
         if (!writeTo.Exists() || !writeTo.GetChildren().Any())
         {
             errors.Add("No Serilog write-to sinks are configured");
         }
 
-        _logger.LogDebug("Logging configuration validation completed");
+        logger.LogDebug("Logging configuration validation completed");
     }
 
     private void ValidateCors(List<string> errors)
     {
-        var corsSection = _configuration.GetSection("Cors");
+        var corsSection = configuration.GetSection("Cors");
         
         if (!corsSection.Exists())
         {
             // CORS configuration is optional, but log a warning
-            _logger.LogWarning("CORS configuration is not present - this may cause issues in browser-based applications");
+            logger.LogWarning("CORS configuration is not present - this may cause issues in browser-based applications");
             return;
         }
 
-        var allowedOrigins = _configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
         if (allowedOrigins is not null && allowedOrigins.Contains("*"))
         {
             errors.Add("CORS is configured to allow all origins (*) - this is a security risk in production");
         }
 
-        _logger.LogDebug("CORS configuration validation completed");
+        logger.LogDebug("CORS configuration validation completed");
     }
 
     /// <summary>
@@ -231,14 +222,14 @@ public sealed class ConfigurationValidator
     {
         return new ConfigurationSummary
         {
-            Environment = _configuration["ASPNETCORE_ENVIRONMENT"] ?? "Unknown",
+            Environment = configuration["ASPNETCORE_ENVIRONMENT"] ?? "Unknown",
             DatabaseProvider = "PostgreSQL",
-            CacheProvider = _configuration["Cache:Provider"] ?? "InMemory",
-            JwtConfigured = !string.IsNullOrWhiteSpace(_configuration["Jwt:Key"]),
-            LoggingConfigured = _configuration.GetSection("Serilog").Exists(),
-            CorsConfigured = _configuration.GetSection("Cors").Exists(),
-            HealthChecksEnabled = _configuration.GetValue<bool>("HealthChecks:Enabled", true),
-            SwaggerEnabled = _configuration.GetValue<bool>("Swagger:Enabled", true)
+            CacheProvider = configuration["Cache:Provider"] ?? "InMemory",
+            JwtConfigured = !string.IsNullOrWhiteSpace(configuration["Jwt:Key"]),
+            LoggingConfigured = configuration.GetSection("Serilog").Exists(),
+            CorsConfigured = configuration.GetSection("Cors").Exists(),
+            HealthChecksEnabled = configuration.GetValue<bool>("HealthChecks:Enabled", true),
+            SwaggerEnabled = configuration.GetValue<bool>("Swagger:Enabled", true)
         };
     }
 }

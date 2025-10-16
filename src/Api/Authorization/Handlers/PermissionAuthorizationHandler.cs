@@ -9,75 +9,65 @@ namespace ModularMonolith.Api.Authorization.Handlers;
 /// <summary>
 /// Authorization handler for permission-based access control
 /// </summary>
-internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
+internal sealed class PermissionAuthorizationHandler(
+    IUserContext userContext,
+    IRoleRepository roleRepository,
+    ILogger<PermissionAuthorizationHandler> logger)
+    : AuthorizationHandler<PermissionRequirement>
 {
-    private readonly IUserContext _userContext;
-    private readonly IRoleRepository _roleRepository;
-    private readonly ILogger<PermissionAuthorizationHandler> _logger;
-
-    public PermissionAuthorizationHandler(
-        IUserContext userContext,
-        IRoleRepository roleRepository,
-        ILogger<PermissionAuthorizationHandler> logger)
-    {
-        _userContext = userContext;
-        _roleRepository = roleRepository;
-        _logger = logger;
-    }
-
     protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
         // Check if user is authenticated
-        if (!_userContext.IsAuthenticated || _userContext.CurrentUserId is null)
+        if (!userContext.IsAuthenticated || userContext.CurrentUserId is null)
         {
-            _logger.LogDebug("User is not authenticated for permission requirement {Requirement}", requirement);
+            logger.LogDebug("User is not authenticated for permission requirement {Requirement}", requirement);
             context.Fail();
             return;
         }
 
-        using IDisposable activity = _logger.BeginScope(new Dictionary<string, object>
+        using IDisposable activity = logger.BeginScope(new Dictionary<string, object>
         {
             ["Operation"] = "PermissionAuthorization",
-            ["UserId"] = _userContext.CurrentUserId.Value,
+            ["UserId"] = userContext.CurrentUserId.Value,
             ["RequiredPermission"] = requirement.ToString()
         });
 
         try
         {
             // Get user's role IDs
-            IReadOnlyList<Guid> userRoleIds = _userContext.CurrentUserRoleIds;
+            IReadOnlyList<Guid> userRoleIds = userContext.CurrentUserRoleIds;
             if (userRoleIds.Count == 0)
             {
-                _logger.LogDebug("User {UserId} has no roles assigned", _userContext.CurrentUserId.Value);
+                logger.LogDebug("User {UserId} has no roles assigned", userContext.CurrentUserId.Value);
                 context.Fail();
                 return;
             }
 
-            _logger.LogDebug("Checking permission {Permission} for user {UserId} with roles {RoleIds}", 
-                requirement, _userContext.CurrentUserId.Value, string.Join(", ", userRoleIds));
+            logger.LogDebug("Checking permission {Permission} for user {UserId} with roles {RoleIds}", 
+                requirement, userContext.CurrentUserId.Value, string.Join(", ", userRoleIds));
 
             // Check if any of the user's roles have the required permission
             bool hasPermission = await CheckUserPermissionsAsync(userRoleIds, requirement);
 
             if (hasPermission)
             {
-                _logger.LogDebug("Permission {Permission} granted for user {UserId}", 
-                    requirement, _userContext.CurrentUserId.Value);
+                logger.LogDebug("Permission {Permission} granted for user {UserId}", 
+                    requirement, userContext.CurrentUserId.Value);
                 context.Succeed(requirement);
             }
             else
             {
-                _logger.LogDebug("Permission {Permission} denied for user {UserId}", 
-                    requirement, _userContext.CurrentUserId.Value);
+                logger.LogDebug("Permission {Permission} denied for user {UserId}", 
+                    requirement, userContext.CurrentUserId.Value);
                 context.Fail();
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking permission {Permission} for user {UserId}", 
-                requirement, _userContext.CurrentUserId?.Value);
+            logger.LogError(ex, "Error checking permission {Permission} for user {UserId}", 
+                requirement, userContext.CurrentUserId?.Value);
             context.Fail();
         }
     }
@@ -91,7 +81,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
         
         foreach (Guid roleId in userRoleIds)
         {
-            Role? role = await _roleRepository.GetByIdAsync(RoleId.From(roleId));
+            Role? role = await roleRepository.GetByIdAsync(RoleId.From(roleId));
             if (role is not null && !role.IsDeleted)
             {
                 userRoles.Add(role);
@@ -107,7 +97,7 @@ internal sealed class PermissionAuthorizationHandler : AuthorizationHandler<Perm
             {
                 if (requirement.Matches(permission.Resource, permission.Action, permission.Scope))
                 {
-                    _logger.LogDebug("Permission match found in role {RoleName}: {Permission}", 
+                    logger.LogDebug("Permission match found in role {RoleName}: {Permission}", 
                         role.Name.Value, permission);
                     return true;
                 }

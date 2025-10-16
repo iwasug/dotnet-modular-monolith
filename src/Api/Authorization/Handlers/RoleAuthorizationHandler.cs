@@ -9,38 +9,28 @@ namespace ModularMonolith.Api.Authorization.Handlers;
 /// <summary>
 /// Authorization handler for role-based access control
 /// </summary>
-internal sealed class RoleAuthorizationHandler : AuthorizationHandler<RoleRequirement>
+internal sealed class RoleAuthorizationHandler(
+    IUserContext userContext,
+    IRoleRepository roleRepository,
+    ILogger<RoleAuthorizationHandler> logger)
+    : AuthorizationHandler<RoleRequirement>
 {
-    private readonly IUserContext _userContext;
-    private readonly IRoleRepository _roleRepository;
-    private readonly ILogger<RoleAuthorizationHandler> _logger;
-
-    public RoleAuthorizationHandler(
-        IUserContext userContext,
-        IRoleRepository roleRepository,
-        ILogger<RoleAuthorizationHandler> logger)
-    {
-        _userContext = userContext;
-        _roleRepository = roleRepository;
-        _logger = logger;
-    }
-
     protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         RoleRequirement requirement)
     {
         // Check if user is authenticated
-        if (!_userContext.IsAuthenticated || _userContext.CurrentUserId is null)
+        if (!userContext.IsAuthenticated || userContext.CurrentUserId is null)
         {
-            _logger.LogDebug("User is not authenticated for role requirement {Requirement}", requirement);
+            logger.LogDebug("User is not authenticated for role requirement {Requirement}", requirement);
             context.Fail();
             return;
         }
 
-        using IDisposable activity = _logger.BeginScope(new Dictionary<string, object>
+        using IDisposable activity = logger.BeginScope(new Dictionary<string, object>
         {
             ["Operation"] = "RoleAuthorization",
-            ["UserId"] = _userContext.CurrentUserId.Value,
+            ["UserId"] = userContext.CurrentUserId.Value,
             ["RequiredRoles"] = string.Join(", ", requirement.RequiredRoles),
             ["RequireAllRoles"] = requirement.RequireAllRoles
         });
@@ -48,16 +38,16 @@ internal sealed class RoleAuthorizationHandler : AuthorizationHandler<RoleRequir
         try
         {
             // Get user's role IDs
-            IReadOnlyList<Guid> userRoleIds = _userContext.CurrentUserRoleIds;
+            IReadOnlyList<Guid> userRoleIds = userContext.CurrentUserRoleIds;
             if (userRoleIds.Count == 0)
             {
-                _logger.LogDebug("User {UserId} has no roles assigned", _userContext.CurrentUserId.Value);
+                logger.LogDebug("User {UserId} has no roles assigned", userContext.CurrentUserId.Value);
                 context.Fail();
                 return;
             }
 
-            _logger.LogDebug("Checking roles {RequiredRoles} for user {UserId} with roles {UserRoleIds}", 
-                string.Join(", ", requirement.RequiredRoles), _userContext.CurrentUserId.Value, 
+            logger.LogDebug("Checking roles {RequiredRoles} for user {UserId} with roles {UserRoleIds}", 
+                string.Join(", ", requirement.RequiredRoles), userContext.CurrentUserId.Value, 
                 string.Join(", ", userRoleIds));
 
             // Get user's role names
@@ -70,21 +60,21 @@ internal sealed class RoleAuthorizationHandler : AuthorizationHandler<RoleRequir
 
             if (hasRequiredRoles)
             {
-                _logger.LogDebug("Role requirement {Requirement} satisfied for user {UserId}", 
-                    requirement, _userContext.CurrentUserId.Value);
+                logger.LogDebug("Role requirement {Requirement} satisfied for user {UserId}", 
+                    requirement, userContext.CurrentUserId.Value);
                 context.Succeed(requirement);
             }
             else
             {
-                _logger.LogDebug("Role requirement {Requirement} not satisfied for user {UserId}. User roles: {UserRoles}", 
-                    requirement, _userContext.CurrentUserId.Value, string.Join(", ", userRoleNames));
+                logger.LogDebug("Role requirement {Requirement} not satisfied for user {UserId}. User roles: {UserRoles}", 
+                    requirement, userContext.CurrentUserId.Value, string.Join(", ", userRoleNames));
                 context.Fail();
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking role requirement {Requirement} for user {UserId}", 
-                requirement, _userContext.CurrentUserId?.Value);
+            logger.LogError(ex, "Error checking role requirement {Requirement} for user {UserId}", 
+                requirement, userContext.CurrentUserId?.Value);
             context.Fail();
         }
     }
@@ -95,7 +85,7 @@ internal sealed class RoleAuthorizationHandler : AuthorizationHandler<RoleRequir
 
         foreach (Guid roleId in userRoleIds)
         {
-            Role? role = await _roleRepository.GetByIdAsync(RoleId.From(roleId));
+            Role? role = await roleRepository.GetByIdAsync(RoleId.From(roleId));
             if (role is not null && !role.IsDeleted)
             {
                 roleNames.Add(role.Name.Value.ToLowerInvariant());

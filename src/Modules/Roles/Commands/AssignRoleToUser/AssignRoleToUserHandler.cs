@@ -10,30 +10,18 @@ namespace ModularMonolith.Roles.Commands.AssignRoleToUser;
 /// <summary>
 /// Handler for AssignRoleToUserCommand following the 3-file pattern
 /// </summary>
-public sealed class AssignRoleToUserHandler : ICommandHandler<AssignRoleToUserCommand, AssignRoleToUserResponse>
+public sealed class AssignRoleToUserHandler(
+    ILogger<AssignRoleToUserHandler> logger,
+    IRoleRepository roleRepository,
+    ITimeService timeService,
+    IRoleLocalizationService roleLocalizationService)
+    : ICommandHandler<AssignRoleToUserCommand, AssignRoleToUserResponse>
 {
-    private readonly ILogger<AssignRoleToUserHandler> _logger;
-    private readonly IRoleRepository _roleRepository;
-    private readonly ITimeService _timeService;
-    private readonly IRoleLocalizationService _roleLocalizationService;
-    
-    public AssignRoleToUserHandler(
-        ILogger<AssignRoleToUserHandler> logger,
-        IRoleRepository roleRepository,
-        ITimeService timeService,
-        IRoleLocalizationService roleLocalizationService)
-    {
-        _logger = logger;
-        _roleRepository = roleRepository;
-        _timeService = timeService;
-        _roleLocalizationService = roleLocalizationService;
-    }
-    
     public async Task<Result<AssignRoleToUserResponse>> Handle(
         AssignRoleToUserCommand command, 
         CancellationToken cancellationToken = default)
     {
-        using var activity = _logger.BeginScope(new Dictionary<string, object>
+        using var activity = logger.BeginScope(new Dictionary<string, object>
         {
             ["Command"] = nameof(AssignRoleToUserCommand),
             ["UserId"] = command.UserId,
@@ -41,18 +29,18 @@ public sealed class AssignRoleToUserHandler : ICommandHandler<AssignRoleToUserCo
             ["CorrelationId"] = Guid.NewGuid()
         });
         
-        _logger.LogInformation("Assigning role {RoleId} to user {UserId}", command.RoleId, command.UserId);
+        logger.LogInformation("Assigning role {RoleId} to user {UserId}", command.RoleId, command.UserId);
         
         try
         {
             // Validate role exists
             var roleId = RoleId.From(command.RoleId);
-            var role = await _roleRepository.GetByIdAsync(roleId, cancellationToken);
+            var role = await roleRepository.GetByIdAsync(roleId, cancellationToken);
             if (role is null)
             {
-                _logger.LogWarning("Role with ID {RoleId} not found", command.RoleId);
+                logger.LogWarning("Role with ID {RoleId} not found", command.RoleId);
                 return Result<AssignRoleToUserResponse>.Failure(
-                    Error.NotFound("ROLE_NOT_FOUND", _roleLocalizationService.GetString("RoleNotFound")));
+                    Error.NotFound("ROLE_NOT_FOUND", roleLocalizationService.GetString("RoleNotFound")));
             }
 
             // TODO: Validate user exists through inter-module communication
@@ -65,18 +53,18 @@ public sealed class AssignRoleToUserHandler : ICommandHandler<AssignRoleToUserCo
                 command.RoleId,
                 role.Name.Value,
                 command.AssignedBy,
-                _timeService.UtcNow
+                timeService.UtcNow
             );
             
-            _logger.LogInformation("Role {RoleId} assigned successfully to user {UserId}", command.RoleId, command.UserId);
+            logger.LogInformation("Role {RoleId} assigned successfully to user {UserId}", command.RoleId, command.UserId);
             
             return Result<AssignRoleToUserResponse>.Success(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error assigning role {RoleId} to user {UserId}", command.RoleId, command.UserId);
+            logger.LogError(ex, "Error assigning role {RoleId} to user {UserId}", command.RoleId, command.UserId);
             return Result<AssignRoleToUserResponse>.Failure(
-                Error.Internal("ROLE_ASSIGNMENT_FAILED", _roleLocalizationService.GetString("RoleAssignmentFailed")));
+                Error.Internal("ROLE_ASSIGNMENT_FAILED", roleLocalizationService.GetString("RoleAssignmentFailed")));
         }
     }
 }

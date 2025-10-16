@@ -11,16 +11,10 @@ namespace ModularMonolith.Shared.Services;
 /// <summary>
 /// Email service implementation using MailKit and MimeKit
 /// </summary>
-internal sealed class EmailService : IEmailService
+internal sealed class EmailService(IOptions<EmailOptions> emailOptions, ILogger<EmailService> logger)
+    : IEmailService
 {
-    private readonly EmailOptions _emailOptions;
-    private readonly ILogger<EmailService> _logger;
-
-    public EmailService(IOptions<EmailOptions> emailOptions, ILogger<EmailService> logger)
-    {
-        _emailOptions = emailOptions.Value;
-        _logger = logger;
-    }
+    private readonly EmailOptions _emailOptions = emailOptions.Value;
 
     public async Task SendEmailAsync(string to, string subject, string body, bool isHtml = true, CancellationToken cancellationToken = default)
     {
@@ -33,11 +27,11 @@ internal sealed class EmailService : IEmailService
         {
             var message = CreateEmailMessage(recipients, subject, body, isHtml);
             await SendMessageAsync(message, cancellationToken);
-            _logger.LogInformation("Email sent successfully to {Recipients}", string.Join(", ", recipients));
+            logger.LogInformation("Email sent successfully to {Recipients}", string.Join(", ", recipients));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email to {Recipients}", string.Join(", ", recipients));
+            logger.LogError(ex, "Failed to send email to {Recipients}", string.Join(", ", recipients));
             throw;
         }
     }
@@ -74,11 +68,11 @@ internal sealed class EmailService : IEmailService
             }
             
             await SendMessageAsync(message, cancellationToken);
-            _logger.LogInformation("Email with attachments sent successfully to {To}", to);
+            logger.LogInformation("Email with attachments sent successfully to {To}", to);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email with attachments to {To}", to);
+            logger.LogError(ex, "Failed to send email with attachments to {To}", to);
             throw;
         }
     }

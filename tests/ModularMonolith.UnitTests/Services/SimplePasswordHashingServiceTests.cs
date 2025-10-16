@@ -5,12 +5,7 @@ namespace ModularMonolith.UnitTests.Services;
 
 public class SimplePasswordHashingServiceTests
 {
-    private readonly SimplePasswordHashingService _service;
-
-    public SimplePasswordHashingServiceTests()
-    {
-        _service = new SimplePasswordHashingService();
-    }
+    private readonly SimplePasswordHashingService _service = new();
 
     [Fact]
     public void HashPassword_ShouldReturnHashedPassword()

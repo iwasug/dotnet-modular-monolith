@@ -7,19 +7,14 @@ namespace ModularMonolith.Users.Domain.Services;
 /// <summary>
 /// User validation service implementing business rules
 /// </summary>
-internal sealed class UserValidationService : IUserValidationService
+internal sealed class UserValidationService(IUserRepository userRepository) : IUserValidationService
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     
     // Password strength requirements
     private static readonly Regex PasswordRegex = new(
         @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]",
         RegexOptions.Compiled);
-
-    public UserValidationService(IUserRepository userRepository)
-    {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-    }
 
     /// <summary>
     /// Validates that an email is not already in use

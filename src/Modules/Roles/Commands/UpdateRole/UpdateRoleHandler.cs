@@ -10,30 +10,20 @@ namespace ModularMonolith.Roles.Commands.UpdateRole;
 /// <summary>
 /// Handler for UpdateRoleCommand following the 3-file pattern
 /// </summary>
-public sealed class UpdateRoleHandler : ICommandHandler<UpdateRoleCommand, UpdateRoleResponse>
+public sealed class UpdateRoleHandler(
+    ILogger<UpdateRoleHandler> logger,
+    IRoleRepository roleRepository,
+    ITimeService timeService,
+    IRoleLocalizationService roleLocalizationService)
+    : ICommandHandler<UpdateRoleCommand, UpdateRoleResponse>
 {
-    private readonly ILogger<UpdateRoleHandler> _logger;
-    private readonly IRoleRepository _roleRepository;
-    private readonly ITimeService _timeService;
-    private readonly IRoleLocalizationService _roleLocalizationService;
-    
-    public UpdateRoleHandler(
-        ILogger<UpdateRoleHandler> logger,
-        IRoleRepository roleRepository,
-        ITimeService timeService,
-        IRoleLocalizationService roleLocalizationService)
-    {
-        _logger = logger;
-        _roleRepository = roleRepository;
-        _timeService = timeService;
-        _roleLocalizationService = roleLocalizationService;
-    }
-    
+    private readonly ITimeService _timeService = timeService;
+
     public async Task<Result<UpdateRoleResponse>> Handle(
         UpdateRoleCommand command, 
         CancellationToken cancellationToken = default)
     {
-        using var activity = _logger.BeginScope(new Dictionary<string, object>
+        using var activity = logger.BeginScope(new Dictionary<string, object>
         {
             ["Command"] = nameof(UpdateRoleCommand),
             ["RoleId"] = command.RoleId,
@@ -41,28 +31,28 @@ public sealed class UpdateRoleHandler : ICommandHandler<UpdateRoleCommand, Updat
             ["CorrelationId"] = Guid.NewGuid()
         });
         
-        _logger.LogInformation("Updating role with ID {RoleId}", command.RoleId);
+        logger.LogInformation("Updating role with ID {RoleId}", command.RoleId);
         
         try
         {
             // Get existing role
             var roleId = RoleId.From(command.RoleId);
-            var role = await _roleRepository.GetByIdAsync(roleId, cancellationToken);
+            var role = await roleRepository.GetByIdAsync(roleId, cancellationToken);
             if (role is null)
             {
-                _logger.LogWarning("Role with ID {RoleId} not found", command.RoleId);
+                logger.LogWarning("Role with ID {RoleId} not found", command.RoleId);
                 return Result<UpdateRoleResponse>.Failure(
-                    Error.NotFound("ROLE_NOT_FOUND", _roleLocalizationService.GetString("RoleNotFound")));
+                    Error.NotFound("ROLE_NOT_FOUND", roleLocalizationService.GetString("RoleNotFound")));
             }
 
             // Check if another role with the same name exists (excluding current role)
             var roleName = RoleName.From(command.Name);
-            var existingRoleWithName = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
+            var existingRoleWithName = await roleRepository.GetByNameAsync(roleName, cancellationToken);
             if (existingRoleWithName is not null && existingRoleWithName.Id != role.Id)
             {
-                _logger.LogWarning("Another role with name {RoleName} already exists", command.Name);
+                logger.LogWarning("Another role with name {RoleName} already exists", command.Name);
                 return Result<UpdateRoleResponse>.Failure(
-                    Error.Conflict("ROLE_NAME_ALREADY_EXISTS", _roleLocalizationService.GetString("RoleNameAlreadyExists")));
+                    Error.Conflict("ROLE_NAME_ALREADY_EXISTS", roleLocalizationService.GetString("RoleNameAlreadyExists")));
             }
 
             // Update role properties
@@ -79,7 +69,7 @@ public sealed class UpdateRoleHandler : ICommandHandler<UpdateRoleCommand, Updat
             }
 
             // Save changes
-            await _roleRepository.UpdateAsync(role, cancellationToken);
+            await roleRepository.UpdateAsync(role, cancellationToken);
 
             var response = new UpdateRoleResponse(
                 role.Id,
@@ -89,15 +79,15 @@ public sealed class UpdateRoleHandler : ICommandHandler<UpdateRoleCommand, Updat
                 role.UpdatedAt
             );
             
-            _logger.LogInformation("Role updated successfully with ID {RoleId}", response.Id);
+            logger.LogInformation("Role updated successfully with ID {RoleId}", response.Id);
             
             return Result<UpdateRoleResponse>.Success(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating role with ID {RoleId}", command.RoleId);
+            logger.LogError(ex, "Error updating role with ID {RoleId}", command.RoleId);
             return Result<UpdateRoleResponse>.Failure(
-                Error.Internal("ROLE_UPDATE_FAILED", _roleLocalizationService.GetString("RoleUpdateFailed")));
+                Error.Internal("ROLE_UPDATE_FAILED", roleLocalizationService.GetString("RoleUpdateFailed")));
         }
     }
 }

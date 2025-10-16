@@ -7,14 +7,10 @@ namespace ModularMonolith.Api.Authorization.Policies;
 /// <summary>
 /// Dynamic authorization policy provider that creates policies on-demand for permissions and roles
 /// </summary>
-internal sealed class DynamicAuthorizationPolicyProvider : IAuthorizationPolicyProvider
+internal sealed class DynamicAuthorizationPolicyProvider(IOptions<AuthorizationOptions> options)
+    : IAuthorizationPolicyProvider
 {
-    private readonly DefaultAuthorizationPolicyProvider _fallbackPolicyProvider;
-
-    public DynamicAuthorizationPolicyProvider(IOptions<AuthorizationOptions> options)
-    {
-        _fallbackPolicyProvider = new DefaultAuthorizationPolicyProvider(options);
-    }
+    private readonly DefaultAuthorizationPolicyProvider _fallbackPolicyProvider = new(options);
 
     public Task<AuthorizationPolicy> GetDefaultPolicyAsync()
     {

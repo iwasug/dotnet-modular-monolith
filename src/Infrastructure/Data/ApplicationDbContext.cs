@@ -12,13 +12,9 @@ namespace ModularMonolith.Infrastructure.Data;
 /// <summary>
 /// Base DbContext that automatically registers DbSet properties for all entities and applies configurations
 /// </summary>
-public abstract class DynamicDbContextBase : DbContext
+public abstract class DynamicDbContextBase(DbContextOptions options) : DbContext(options)
 {
     private readonly Dictionary<Type, object> _dbSets = new();
-
-    protected DynamicDbContextBase(DbContextOptions options) : base(options)
-    {
-    }
 
     /// <summary>
     /// Gets a DbSet for the specified entity type, creating it dynamically if needed
@@ -395,17 +391,11 @@ public class EntityRegistrationStats
 /// <summary>
 /// Application database context for the modular monolith with automatic audit functionality and dynamic entity registration
 /// </summary>
-public class ApplicationDbContext : DynamicDbContextBase
+public class ApplicationDbContext(
+    DbContextOptions<ApplicationDbContext> options,
+    IHttpContextAccessor httpContextAccessor)
+    : DynamicDbContextBase(options)
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public ApplicationDbContext(
-        DbContextOptions<ApplicationDbContext> options,
-        IHttpContextAccessor httpContextAccessor) : base(options)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
-
     // Dynamic DbSet properties - automatically available for all registered entities
     // Access any entity using: Set<EntityType>() or context.Set<User>(), context.Set<Role>(), etc.
     
@@ -508,7 +498,7 @@ public class ApplicationDbContext : DynamicDbContextBase
 
     private Guid? GetCurrentUserId()
     {
-        var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdClaim = httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
         {

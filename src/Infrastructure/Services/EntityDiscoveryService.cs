@@ -41,40 +41,33 @@ public interface IEntityDiscoveryService
 /// <summary>
 /// Implementation of entity discovery service
 /// </summary>
-internal sealed class EntityDiscoveryService : IEntityDiscoveryService
+internal sealed class EntityDiscoveryService(ILogger<EntityDiscoveryService> logger) : IEntityDiscoveryService
 {
-    private readonly ILogger<EntityDiscoveryService> _logger;
-
-    public EntityDiscoveryService(ILogger<EntityDiscoveryService> logger)
-    {
-        _logger = logger;
-    }
-
     public IEnumerable<Type> DiscoverEntityTypes()
     {
-        _logger.LogDebug("Discovering entity types from module assemblies");
+        logger.LogDebug("Discovering entity types from module assemblies");
 
         var entityTypes = DynamicDbContextBase.DiscoverModuleEntityTypes().ToList();
 
-        _logger.LogInformation("Discovered {Count} entity types", entityTypes.Count);
+        logger.LogInformation("Discovered {Count} entity types", entityTypes.Count);
 
         return entityTypes;
     }
 
     public EntityRegistrationStats GetEntityStats(DynamicDbContextBase context)
     {
-        _logger.LogDebug("Getting entity registration statistics");
+        logger.LogDebug("Getting entity registration statistics");
 
         var stats = context.GetEntityStats();
 
-        _logger.LogInformation("Entity stats: {Stats}", stats);
+        logger.LogInformation("Entity stats: {Stats}", stats);
 
         return stats;
     }
 
     public EntityValidationResult ValidateEntityRegistration(DynamicDbContextBase context)
     {
-        _logger.LogDebug("Validating entity registration");
+        logger.LogDebug("Validating entity registration");
 
         var discoveredTypes = DiscoverEntityTypes().ToList();
         var registeredTypes = context.GetRegisteredEntityTypes().ToList();
@@ -95,12 +88,12 @@ internal sealed class EntityDiscoveryService : IEntityDiscoveryService
 
         if (!result.IsValid)
         {
-            _logger.LogWarning("Entity validation failed. Missing types: {MissingTypes}", 
+            logger.LogWarning("Entity validation failed. Missing types: {MissingTypes}", 
                 string.Join(", ", missingTypes.Select(t => t.Name)));
         }
         else
         {
-            _logger.LogInformation("Entity validation passed. All {Count} discovered entities are registered", 
+            logger.LogInformation("Entity validation passed. All {Count} discovered entities are registered", 
                 discoveredTypes.Count);
         }
 
@@ -109,7 +102,7 @@ internal sealed class EntityDiscoveryService : IEntityDiscoveryService
 
     public IEnumerable<EntityInfo> GetEntityDetails(DynamicDbContextBase context)
     {
-        _logger.LogDebug("Getting detailed entity information");
+        logger.LogDebug("Getting detailed entity information");
 
         var entityInfos = new List<EntityInfo>();
 
@@ -129,7 +122,7 @@ internal sealed class EntityDiscoveryService : IEntityDiscoveryService
             entityInfos.Add(entityInfo);
         }
 
-        _logger.LogDebug("Retrieved details for {Count} entities", entityInfos.Count);
+        logger.LogDebug("Retrieved details for {Count} entities", entityInfos.Count);
 
         return entityInfos.OrderBy(e => e.Module).ThenBy(e => e.Name);
     }

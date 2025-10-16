@@ -10,30 +10,17 @@ namespace ModularMonolith.Api.Middleware;
 /// Global exception handling middleware that catches unhandled exceptions
 /// and returns properly formatted error responses with structured logging
 /// </summary>
-internal sealed class GlobalExceptionMiddleware
+internal sealed class GlobalExceptionMiddleware(
+    RequestDelegate next,
+    ILogger<GlobalExceptionMiddleware> logger,
+    IWebHostEnvironment environment,
+    ILocalizedErrorService localizedErrorService)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<GlobalExceptionMiddleware> _logger;
-    private readonly IWebHostEnvironment _environment;
-    private readonly ILocalizedErrorService _localizedErrorService;
-
-    public GlobalExceptionMiddleware(
-        RequestDelegate next,
-        ILogger<GlobalExceptionMiddleware> logger,
-        IWebHostEnvironment environment,
-        ILocalizedErrorService localizedErrorService)
-    {
-        _next = next;
-        _logger = logger;
-        _environment = environment;
-        _localizedErrorService = localizedErrorService;
-    }
-
     public async Task InvokeAsync(HttpContext context)
     {
         try
         {
-            await _next(context);
+            await next(context);
         }
         catch (Exception exception)
         {
@@ -46,7 +33,7 @@ internal sealed class GlobalExceptionMiddleware
         var correlationId = context.TraceIdentifier;
         
         // Log the exception with structured logging
-        using var scope = _logger.BeginScope(new Dictionary<string, object>
+        using var scope = logger.BeginScope(new Dictionary<string, object>
         {
             ["CorrelationId"] = correlationId,
             ["RequestPath"] = context.Request.Path,
@@ -56,7 +43,7 @@ internal sealed class GlobalExceptionMiddleware
             ["RemoteIpAddress"] = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown"
         });
 
-        _logger.LogError(exception, 
+        logger.LogError(exception, 
             "Unhandled exception occurred while processing request {RequestMethod} {RequestPath}",
             context.Request.Method, 
             context.Request.Path);
@@ -83,7 +70,7 @@ internal sealed class GlobalExceptionMiddleware
         var jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = _environment.IsDevelopment()
+            WriteIndented = environment.IsDevelopment()
         };
 
         var jsonResponse = JsonSerializer.Serialize(errorResponse, jsonOptions);
@@ -95,30 +82,30 @@ internal sealed class GlobalExceptionMiddleware
         return exception switch
         {
             ArgumentNullException => (HttpStatusCode.BadRequest, 
-                _localizedErrorService.CreateValidationError("MISSING_ARGUMENT", "BadRequest", culture)),
+                localizedErrorService.CreateValidationError("MISSING_ARGUMENT", "BadRequest", culture)),
             
             ArgumentException => (HttpStatusCode.BadRequest, 
-                _localizedErrorService.CreateValidationError("INVALID_ARGUMENT", "BadRequest", culture)),
+                localizedErrorService.CreateValidationError("INVALID_ARGUMENT", "BadRequest", culture)),
             
             InvalidOperationException => (HttpStatusCode.BadRequest, 
-                _localizedErrorService.CreateValidationError("INVALID_OPERATION", "BadRequest", culture)),
+                localizedErrorService.CreateValidationError("INVALID_OPERATION", "BadRequest", culture)),
             
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, 
-                _localizedErrorService.CreateUnauthorizedError("UNAUTHORIZED_ACCESS", "UnauthorizedAccess", culture)),
+                localizedErrorService.CreateUnauthorizedError("UNAUTHORIZED_ACCESS", "UnauthorizedAccess", culture)),
             
             NotImplementedException => (HttpStatusCode.NotImplemented, 
-                _localizedErrorService.CreateInternalError("NOT_IMPLEMENTED", "InternalServerError", culture)),
+                localizedErrorService.CreateInternalError("NOT_IMPLEMENTED", "InternalServerError", culture)),
             
             TimeoutException => (HttpStatusCode.RequestTimeout, 
-                _localizedErrorService.CreateInternalError("REQUEST_TIMEOUT", "InternalServerError", culture)),
+                localizedErrorService.CreateInternalError("REQUEST_TIMEOUT", "InternalServerError", culture)),
             
             TaskCanceledException => (HttpStatusCode.RequestTimeout, 
-                _localizedErrorService.CreateInternalError("REQUEST_CANCELLED", "InternalServerError", culture)),
+                localizedErrorService.CreateInternalError("REQUEST_CANCELLED", "InternalServerError", culture)),
             
             _ => (HttpStatusCode.InternalServerError, 
-                _environment.IsDevelopment() 
+                environment.IsDevelopment() 
                     ? Error.Internal("INTERNAL_ERROR", exception.Message)
-                    : _localizedErrorService.CreateInternalError("INTERNAL_ERROR", "InternalServerError", culture))
+                    : localizedErrorService.CreateInternalError("INTERNAL_ERROR", "InternalServerError", culture))
         };
     }
 }

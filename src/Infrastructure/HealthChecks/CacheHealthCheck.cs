@@ -6,16 +6,10 @@ namespace ModularMonolith.Infrastructure.HealthChecks;
 /// <summary>
 /// Health check for cache service connectivity and performance
 /// </summary>
-public sealed class CacheHealthCheck : IHealthCheck
+public sealed class CacheHealthCheck(ICacheService cacheService) : IHealthCheck
 {
-    private readonly ICacheService _cacheService;
     private const string TestKey = "health-check-test";
     private const string TestValue = "test-value";
-
-    public CacheHealthCheck(ICacheService cacheService)
-    {
-        _cacheService = cacheService;
-    }
 
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context, 
@@ -26,20 +20,20 @@ public sealed class CacheHealthCheck : IHealthCheck
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             
             // Test cache write operation
-            await _cacheService.SetAsync(TestKey, TestValue, TimeSpan.FromMinutes(1), cancellationToken);
+            await cacheService.SetAsync(TestKey, TestValue, TimeSpan.FromMinutes(1), cancellationToken);
             
             // Test cache read operation
-            var retrievedValue = await _cacheService.GetAsync<string>(TestKey, cancellationToken);
+            var retrievedValue = await cacheService.GetAsync<string>(TestKey, cancellationToken);
             
             // Test cache delete operation
-            await _cacheService.RemoveAsync(TestKey, cancellationToken);
+            await cacheService.RemoveAsync(TestKey, cancellationToken);
             
             stopwatch.Stop();
 
             var data = new Dictionary<string, object>
             {
                 ["ResponseTime"] = $"{stopwatch.ElapsedMilliseconds}ms",
-                ["CacheType"] = _cacheService.GetType().Name
+                ["CacheType"] = cacheService.GetType().Name
             };
 
             // Verify the cache operations worked correctly
@@ -65,7 +59,7 @@ public sealed class CacheHealthCheck : IHealthCheck
         {
             return HealthCheckResult.Unhealthy("Cache health check failed", ex, new Dictionary<string, object>
             {
-                ["CacheType"] = _cacheService.GetType().Name,
+                ["CacheType"] = cacheService.GetType().Name,
                 ["Error"] = ex.Message
             });
         }

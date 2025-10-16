@@ -5,25 +5,16 @@ namespace ModularMonolith.Api.Middleware;
 /// <summary>
 /// Middleware to add security headers to HTTP responses
 /// </summary>
-public sealed class SecurityHeadersMiddleware
+public sealed class SecurityHeadersMiddleware(RequestDelegate next, ILogger<SecurityHeadersMiddleware> logger)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<SecurityHeadersMiddleware> _logger;
-    private readonly string _nonce;
-
-    public SecurityHeadersMiddleware(RequestDelegate next, ILogger<SecurityHeadersMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-        _nonce = GenerateNonce();
-    }
+    private readonly string _nonce = GenerateNonce();
 
     public async Task InvokeAsync(HttpContext context)
     {
         // Add security headers before processing the request
         AddSecurityHeaders(context);
 
-        await _next(context);
+        await next(context);
     }
 
     private void AddSecurityHeaders(HttpContext context)
@@ -78,11 +69,11 @@ public sealed class SecurityHeadersMiddleware
                 headers.Append("Expires", "0");
             }
 
-            _logger.LogDebug("Security headers added to response for {Path}", context.Request.Path);
+            logger.LogDebug("Security headers added to response for {Path}", context.Request.Path);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to add security headers for {Path}", context.Request.Path);
+            logger.LogWarning(ex, "Failed to add security headers for {Path}", context.Request.Path);
         }
     }
 

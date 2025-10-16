@@ -7,29 +7,20 @@ namespace ModularMonolith.Shared.Services;
 /// <summary>
 /// Implementation of localization service for shared resources
 /// </summary>
-public sealed class LocalizationService : ILocalizationService
+public sealed class LocalizationService(ILogger<LocalizationService> logger) : ILocalizationService
 {
-    private readonly ResourceManager _validationResourceManager;
-    private readonly ResourceManager _errorResourceManager;
-    private readonly ILogger<LocalizationService> _logger;
-    private readonly string[] _supportedCultures;
+    private readonly ResourceManager _validationResourceManager = new(
+        "ModularMonolith.Shared.Resources.ValidationMessages", 
+        typeof(LocalizationService).Assembly);
+    private readonly ResourceManager _errorResourceManager = new(
+        "ModularMonolith.Shared.Resources.ErrorMessages", 
+        typeof(LocalizationService).Assembly);
 
-    public LocalizationService(ILogger<LocalizationService> logger)
+    private readonly string[] _supportedCultures = new[]
     {
-        _logger = logger;
-        _validationResourceManager = new ResourceManager(
-            "ModularMonolith.Shared.Resources.ValidationMessages", 
-            typeof(LocalizationService).Assembly);
-        _errorResourceManager = new ResourceManager(
-            "ModularMonolith.Shared.Resources.ErrorMessages", 
-            typeof(LocalizationService).Assembly);
-        
-        _supportedCultures = new[]
-        {
-            "en-US", "es-ES", "fr-FR", "de-DE",
-            "pt-BR", "it-IT", "ja-JP", "zh-CN"
-        };
-    }
+        "en-US", "es-ES", "fr-FR", "de-DE",
+        "pt-BR", "it-IT", "ja-JP", "zh-CN"
+    };
 
     public CultureInfo CurrentCulture => CultureInfo.CurrentCulture;
 
@@ -49,7 +40,7 @@ public sealed class LocalizationService : ILocalizationService
             
             if (value is null)
             {
-                _logger.LogWarning("Localization key '{Key}' not found for culture '{Culture}'", key, cultureInfo.Name);
+                logger.LogWarning("Localization key '{Key}' not found for culture '{Culture}'", key, cultureInfo.Name);
                 return key; // Return key as fallback
             }
 
@@ -57,7 +48,7 @@ public sealed class LocalizationService : ILocalizationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting localized string for key '{Key}' and culture '{Culture}'", key, culture);
+            logger.LogError(ex, "Error getting localized string for key '{Key}' and culture '{Culture}'", key, culture);
             return key; // Return key as fallback
         }
     }
@@ -76,7 +67,7 @@ public sealed class LocalizationService : ILocalizationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error formatting localized string for key '{Key}' with args", key);
+            logger.LogError(ex, "Error formatting localized string for key '{Key}' with args", key);
             return key; // Return key as fallback
         }
     }
@@ -99,7 +90,7 @@ public sealed class LocalizationService : ILocalizationService
         }
         catch (CultureNotFoundException)
         {
-            _logger.LogWarning("Culture '{Culture}' not found, falling back to current UI culture", culture);
+            logger.LogWarning("Culture '{Culture}' not found, falling back to current UI culture", culture);
             return CultureInfo.CurrentUICulture;
         }
     }

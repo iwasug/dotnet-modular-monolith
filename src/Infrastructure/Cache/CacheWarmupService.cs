@@ -10,17 +10,10 @@ namespace ModularMonolith.Infrastructure.Cache;
 /// <summary>
 /// Background service for warming up cache with frequently accessed data
 /// </summary>
-public sealed class CacheWarmupService : BackgroundService
+public sealed class CacheWarmupService(IServiceProvider serviceProvider, ILogger<CacheWarmupService> logger)
+    : BackgroundService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<CacheWarmupService> _logger;
     private readonly TimeSpan _warmupInterval = TimeSpan.FromHours(6); // Warm up every 6 hours
-
-    public CacheWarmupService(IServiceProvider serviceProvider, ILogger<CacheWarmupService> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -41,7 +34,7 @@ public sealed class CacheWarmupService : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during cache warmup");
+                logger.LogError(ex, "Error during cache warmup");
                 // Wait a shorter time before retrying on error
                 await Task.Delay(TimeSpan.FromMinutes(30), stoppingToken);
             }
@@ -50,10 +43,10 @@ public sealed class CacheWarmupService : BackgroundService
 
     private async Task WarmupCache(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting cache warmup process");
+        logger.LogInformation("Starting cache warmup process");
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
 
         try
@@ -64,13 +57,13 @@ public sealed class CacheWarmupService : BackgroundService
             await WarmupSystemMetrics(scope.ServiceProvider, cacheService, cancellationToken);
 
             stopwatch.Stop();
-            _logger.LogInformation("Cache warmup completed successfully in {Duration}ms", 
+            logger.LogInformation("Cache warmup completed successfully in {Duration}ms", 
                 stopwatch.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
             stopwatch.Stop();
-            _logger.LogError(ex, "Cache warmup failed after {Duration}ms", 
+            logger.LogError(ex, "Cache warmup failed after {Duration}ms", 
                 stopwatch.ElapsedMilliseconds);
             throw;
         }
@@ -83,7 +76,7 @@ public sealed class CacheWarmupService : BackgroundService
             var userRepository = serviceProvider.GetService<IUserRepository>();
             if (userRepository is null) return;
 
-            _logger.LogDebug("Warming up active users cache");
+            logger.LogDebug("Warming up active users cache");
 
             // Cache active users count
             var activeUserCount = await userRepository.GetActiveCountAsync(cancellationToken);
@@ -98,11 +91,11 @@ public sealed class CacheWarmupService : BackgroundService
             var firstPageUsers = activeUsers.Take(20).ToList(); // First 20 users
             await cacheService.SetAsync("users:active", firstPageUsers, TimeSpan.FromMinutes(30), cancellationToken);
 
-            _logger.LogDebug("Warmed up {UserCount} active users in cache", firstPageUsers.Count);
+            logger.LogDebug("Warmed up {UserCount} active users in cache", firstPageUsers.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to warm up users cache");
+            logger.LogWarning(ex, "Failed to warm up users cache");
         }
     }
 
@@ -113,7 +106,7 @@ public sealed class CacheWarmupService : BackgroundService
             var roleRepository = serviceProvider.GetService<IRoleRepository>();
             if (roleRepository is null) return;
 
-            _logger.LogDebug("Warming up active roles cache");
+            logger.LogDebug("Warming up active roles cache");
 
             // Cache active roles (typically small dataset)
             var activeRoles = await roleRepository.GetActiveRolesAsync(cancellationToken);
@@ -130,11 +123,11 @@ public sealed class CacheWarmupService : BackgroundService
                 await cacheService.SetAsync(cacheKey, role, TimeSpan.FromHours(1), cancellationToken);
             }
 
-            _logger.LogDebug("Warmed up {RoleCount} active roles in cache", activeRoles.Count);
+            logger.LogDebug("Warmed up {RoleCount} active roles in cache", activeRoles.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to warm up roles cache");
+            logger.LogWarning(ex, "Failed to warm up roles cache");
         }
     }
 
@@ -142,7 +135,7 @@ public sealed class CacheWarmupService : BackgroundService
     {
         try
         {
-            _logger.LogDebug("Warming up system metrics cache");
+            logger.LogDebug("Warming up system metrics cache");
 
             // Cache system health status
             var healthStatus = new
@@ -163,17 +156,17 @@ public sealed class CacheWarmupService : BackgroundService
             };
             await cacheService.SetAsync("system:metadata", appMetadata, TimeSpan.FromHours(24), cancellationToken);
 
-            _logger.LogDebug("Warmed up system metrics in cache");
+            logger.LogDebug("Warmed up system metrics in cache");
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to warm up system metrics cache");
+            logger.LogWarning(ex, "Failed to warm up system metrics cache");
         }
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Cache warmup service is stopping");
+        logger.LogInformation("Cache warmup service is stopping");
         await base.StopAsync(cancellationToken);
     }
 }

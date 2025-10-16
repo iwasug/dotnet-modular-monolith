@@ -9,27 +9,17 @@ namespace ModularMonolith.Roles.Queries.GetRoles;
 /// <summary>
 /// Handler for GetRolesQuery following the 3-file pattern
 /// </summary>
-public sealed class GetRolesHandler : IQueryHandler<GetRolesQuery, GetRolesResponse>
+public sealed class GetRolesHandler(
+    ILogger<GetRolesHandler> logger,
+    IRoleRepository roleRepository,
+    IRoleLocalizationService roleLocalizationService)
+    : IQueryHandler<GetRolesQuery, GetRolesResponse>
 {
-    private readonly ILogger<GetRolesHandler> _logger;
-    private readonly IRoleRepository _roleRepository;
-    private readonly IRoleLocalizationService _roleLocalizationService;
-    
-    public GetRolesHandler(
-        ILogger<GetRolesHandler> logger,
-        IRoleRepository roleRepository,
-        IRoleLocalizationService roleLocalizationService)
-    {
-        _logger = logger;
-        _roleRepository = roleRepository;
-        _roleLocalizationService = roleLocalizationService;
-    }
-    
     public async Task<Result<GetRolesResponse>> Handle(
         GetRolesQuery query, 
         CancellationToken cancellationToken = default)
     {
-        using var activity = _logger.BeginScope(new Dictionary<string, object>
+        using var activity = logger.BeginScope(new Dictionary<string, object>
         {
             ["Query"] = nameof(GetRolesQuery),
             ["NameFilter"] = query.NameFilter ?? "null",
@@ -38,13 +28,13 @@ public sealed class GetRolesHandler : IQueryHandler<GetRolesQuery, GetRolesRespo
             ["CorrelationId"] = Guid.NewGuid()
         });
         
-        _logger.LogInformation("Getting roles with filters - Name: {NameFilter}, Page: {PageNumber}, Size: {PageSize}", 
+        logger.LogInformation("Getting roles with filters - Name: {NameFilter}, Page: {PageNumber}, Size: {PageSize}", 
             query.NameFilter, query.PageNumber, query.PageSize);
         
         try
         {
             // Get all roles (soft delete filter is applied automatically by EF Core global query filter)
-            IReadOnlyList<Role> allRoles = await _roleRepository.GetAllAsync(cancellationToken);
+            IReadOnlyList<Role> allRoles = await roleRepository.GetAllAsync(cancellationToken);
 
             // Apply filters in memory (in production, this should be done at the database level)
             IEnumerable<Role> filteredRoles = allRoles.AsEnumerable();
@@ -98,16 +88,16 @@ public sealed class GetRolesHandler : IQueryHandler<GetRolesQuery, GetRolesRespo
                 totalPages
             );
             
-            _logger.LogInformation("Retrieved {RoleCount} roles out of {TotalCount} total roles", 
+            logger.LogInformation("Retrieved {RoleCount} roles out of {TotalCount} total roles", 
                 roleDtos.Count, totalCount);
             
             return Result<GetRolesResponse>.Success(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving roles with filters");
+            logger.LogError(ex, "Error retrieving roles with filters");
             return Result<GetRolesResponse>.Failure(
-                Error.Internal("ROLES_RETRIEVAL_FAILED", _roleLocalizationService.GetString("RolesRetrievalFailed")));
+                Error.Internal("ROLES_RETRIEVAL_FAILED", roleLocalizationService.GetString("RolesRetrievalFailed")));
         }
     }
 }

@@ -9,17 +9,13 @@ namespace ModularMonolith.Infrastructure.Performance;
 /// <summary>
 /// Interceptor for monitoring EF Core query performance and identifying slow queries
 /// </summary>
-public sealed class QueryPerformanceMonitor : DbCommandInterceptor
+public sealed class QueryPerformanceMonitor(
+    ILogger<QueryPerformanceMonitor> logger,
+    TimeSpan? slowQueryThreshold = null)
+    : DbCommandInterceptor
 {
-    private readonly ILogger<QueryPerformanceMonitor> _logger;
     private readonly ConcurrentDictionary<Guid, QueryMetrics> _activeQueries = new();
-    private readonly TimeSpan _slowQueryThreshold;
-
-    public QueryPerformanceMonitor(ILogger<QueryPerformanceMonitor> logger, TimeSpan? slowQueryThreshold = null)
-    {
-        _logger = logger;
-        _slowQueryThreshold = slowQueryThreshold ?? TimeSpan.FromMilliseconds(1000); // 1 second default
-    }
+    private readonly TimeSpan _slowQueryThreshold = slowQueryThreshold ?? TimeSpan.FromMilliseconds(1000); // 1 second default
 
     public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
         DbCommand command,
@@ -41,7 +37,7 @@ public sealed class QueryPerformanceMonitor : DbCommandInterceptor
         // Add query ID to command for tracking
         command.CommandText = $"/* QueryId: {queryId} */ {command.CommandText}";
 
-        _logger.LogDebug("Query started: {QueryId} - {CommandText}", 
+        logger.LogDebug("Query started: {QueryId} - {CommandText}", 
             queryId, TruncateQuery(command.CommandText));
 
         return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
@@ -88,7 +84,7 @@ public sealed class QueryPerformanceMonitor : DbCommandInterceptor
         _activeQueries[queryId] = metrics;
         command.CommandText = $"/* QueryId: {queryId} */ {command.CommandText}";
 
-        _logger.LogDebug("Non-query started: {QueryId} - {CommandText}", 
+        logger.LogDebug("Non-query started: {QueryId} - {CommandText}", 
             queryId, TruncateQuery(command.CommandText));
 
         return base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
@@ -124,21 +120,21 @@ public sealed class QueryPerformanceMonitor : DbCommandInterceptor
         
         if (isSlowQuery)
         {
-            _logger.LogWarning("Slow query detected: {QueryId} took {Duration}ms - {CommandText}",
+            logger.LogWarning("Slow query detected: {QueryId} took {Duration}ms - {CommandText}",
                 metrics.QueryId,
                 metrics.Duration.TotalMilliseconds,
                 TruncateQuery(metrics.CommandText));
         }
         else
         {
-            _logger.LogDebug("Query completed: {QueryId} took {Duration}ms - Rows affected: {RowsAffected}",
+            logger.LogDebug("Query completed: {QueryId} took {Duration}ms - Rows affected: {RowsAffected}",
                 metrics.QueryId,
                 metrics.Duration.TotalMilliseconds,
                 metrics.RowsAffected);
         }
 
         // Log structured metrics for monitoring systems
-        using var scope = _logger.BeginScope(new Dictionary<string, object>
+        using var scope = logger.BeginScope(new Dictionary<string, object>
         {
             ["QueryId"] = metrics.QueryId,
             ["Duration"] = metrics.Duration.TotalMilliseconds,
@@ -149,20 +145,20 @@ public sealed class QueryPerformanceMonitor : DbCommandInterceptor
 
         if (isSlowQuery)
         {
-            _logger.LogInformation("Query performance metrics logged for slow query");
+            logger.LogInformation("Query performance metrics logged for slow query");
         }
     }
 
     private void LogQueryFailure(QueryMetrics metrics)
     {
-        _logger.LogError(metrics.Exception, 
+        logger.LogError(metrics.Exception, 
             "Query failed: {QueryId} after {Duration}ms - {CommandText}",
             metrics.QueryId,
             metrics.Duration.TotalMilliseconds,
             TruncateQuery(metrics.CommandText));
 
         // Log structured metrics for monitoring systems
-        using var scope = _logger.BeginScope(new Dictionary<string, object>
+        using var scope = logger.BeginScope(new Dictionary<string, object>
         {
             ["QueryId"] = metrics.QueryId,
             ["Duration"] = metrics.Duration.TotalMilliseconds,
@@ -170,7 +166,7 @@ public sealed class QueryPerformanceMonitor : DbCommandInterceptor
             ["QueryType"] = GetQueryType(metrics.CommandText)
         });
 
-        _logger.LogInformation("Query failure metrics logged");
+        logger.LogInformation("Query failure metrics logged");
     }
 
     private static Guid? ExtractQueryId(string commandText)

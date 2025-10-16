@@ -10,61 +10,51 @@ namespace ModularMonolith.Users.Commands.UpdateUser;
 /// <summary>
 /// Handler for UpdateUserCommand with localized error messages
 /// </summary>
-internal sealed class UpdateUserHandler : ICommandHandler<UpdateUserCommand, UpdateUserResponse>
+internal sealed class UpdateUserHandler(
+    ILogger<UpdateUserHandler> logger,
+    IUserRepository userRepository,
+    ITimeService timeService,
+    IUserLocalizationService userLocalizationService)
+    : ICommandHandler<UpdateUserCommand, UpdateUserResponse>
 {
-    private readonly ILogger<UpdateUserHandler> _logger;
-    private readonly IUserRepository _userRepository;
-    private readonly ITimeService _timeService;
-    private readonly IUserLocalizationService _userLocalizationService;
-    
-    public UpdateUserHandler(
-        ILogger<UpdateUserHandler> logger,
-        IUserRepository userRepository,
-        ITimeService timeService,
-        IUserLocalizationService userLocalizationService)
-    {
-        _logger = logger;
-        _userRepository = userRepository;
-        _timeService = timeService;
-        _userLocalizationService = userLocalizationService;
-    }
-    
+    private readonly ITimeService _timeService = timeService;
+
     public async Task<Result<UpdateUserResponse>> Handle(
         UpdateUserCommand command, 
         CancellationToken cancellationToken = default)
     {
-        using var activity = _logger.BeginScope(new Dictionary<string, object>
+        using var activity = logger.BeginScope(new Dictionary<string, object>
         {
             ["Command"] = nameof(UpdateUserCommand),
             ["UserId"] = command.Id,
             ["CorrelationId"] = Guid.NewGuid()
         });
         
-        _logger.LogInformation("Updating user with ID {UserId}", command.Id);
+        logger.LogInformation("Updating user with ID {UserId}", command.Id);
         
         try
         {
             // Get existing user
             UserId userId = UserId.From(command.Id);
-            User? user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+            User? user = await userRepository.GetByIdAsync(userId, cancellationToken);
             
             if (user is null)
             {
-                _logger.LogWarning("User with ID {UserId} not found", command.Id);
+                logger.LogWarning("User with ID {UserId} not found", command.Id);
                 return Result<UpdateUserResponse>.Failure(
-                    Error.NotFound("USER_NOT_FOUND", _userLocalizationService.GetString("UserNotFound")));
+                    Error.NotFound("USER_NOT_FOUND", userLocalizationService.GetString("UserNotFound")));
             }
 
             // Check if email is being changed and if new email already exists
             Email newEmail = Email.From(command.Email);
             if (user.Email != newEmail)
             {
-                User? existingUserWithEmail = await _userRepository.GetByEmailAsync(newEmail, cancellationToken);
+                User? existingUserWithEmail = await userRepository.GetByEmailAsync(newEmail, cancellationToken);
                 if (existingUserWithEmail is not null && existingUserWithEmail.Id != command.Id)
                 {
-                    _logger.LogWarning("Email {Email} already exists for another user", command.Email);
+                    logger.LogWarning("Email {Email} already exists for another user", command.Email);
                     return Result<UpdateUserResponse>.Failure(
-                        Error.Conflict("USER_ALREADY_EXISTS", _userLocalizationService.GetString("UserAlreadyExists")));
+                        Error.Conflict("USER_ALREADY_EXISTS", userLocalizationService.GetString("UserAlreadyExists")));
                 }
             }
 
@@ -73,7 +63,7 @@ internal sealed class UpdateUserHandler : ICommandHandler<UpdateUserCommand, Upd
             user.UpdateProfile(newProfile);
 
             // Update repository
-            await _userRepository.UpdateAsync(user, cancellationToken);
+            await userRepository.UpdateAsync(user, cancellationToken);
 
             var response = new UpdateUserResponse(
                 user.Id,
@@ -83,15 +73,15 @@ internal sealed class UpdateUserHandler : ICommandHandler<UpdateUserCommand, Upd
                 user.UpdatedAt
             );
             
-            _logger.LogInformation("User updated successfully with ID {UserId}", response.Id);
+            logger.LogInformation("User updated successfully with ID {UserId}", response.Id);
             
             return Result<UpdateUserResponse>.Success(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating user with ID {UserId}", command.Id);
+            logger.LogError(ex, "Error updating user with ID {UserId}", command.Id);
             return Result<UpdateUserResponse>.Failure(
-                Error.Internal("USER_UPDATE_FAILED", _userLocalizationService.GetString("UserUpdateFailed")));
+                Error.Internal("USER_UPDATE_FAILED", userLocalizationService.GetString("UserUpdateFailed")));
         }
     }
 }

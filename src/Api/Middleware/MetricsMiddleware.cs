@@ -6,24 +6,15 @@ namespace ModularMonolith.Api.Middleware;
 /// <summary>
 /// Middleware to collect performance metrics for HTTP requests
 /// </summary>
-public sealed class MetricsMiddleware
+public sealed class MetricsMiddleware(RequestDelegate next, IMetricsService metricsService)
 {
-    private readonly RequestDelegate _next;
-    private readonly IMetricsService _metricsService;
-
-    public MetricsMiddleware(RequestDelegate next, IMetricsService metricsService)
-    {
-        _next = next;
-        _metricsService = metricsService;
-    }
-
     public async Task InvokeAsync(HttpContext context)
     {
         var stopwatch = Stopwatch.StartNew();
         var request = context.Request;
         
         // Record request start
-        _metricsService.IncrementCounter("http_requests_total", new Dictionary<string, string>
+        metricsService.IncrementCounter("http_requests_total", new Dictionary<string, string>
         {
             ["method"] = request.Method,
             ["endpoint"] = GetEndpointPattern(context)
@@ -31,7 +22,7 @@ public sealed class MetricsMiddleware
 
         try
         {
-            await _next(context);
+            await next(context);
         }
         finally
         {
@@ -40,14 +31,14 @@ public sealed class MetricsMiddleware
             var endpoint = GetEndpointPattern(context);
             
             // Record request duration and status
-            _metricsService.RecordRequestDuration(
+            metricsService.RecordRequestDuration(
                 endpoint, 
                 request.Method, 
                 response.StatusCode, 
                 stopwatch.Elapsed.TotalMilliseconds);
 
             // Record response status code counter
-            _metricsService.IncrementCounter("http_responses_total", new Dictionary<string, string>
+            metricsService.IncrementCounter("http_responses_total", new Dictionary<string, string>
             {
                 ["method"] = request.Method,
                 ["endpoint"] = endpoint,
@@ -56,7 +47,7 @@ public sealed class MetricsMiddleware
             });
 
             // Record request duration histogram
-            _metricsService.RecordHistogram("http_request_duration_ms", 
+            metricsService.RecordHistogram("http_request_duration_ms", 
                 stopwatch.Elapsed.TotalMilliseconds, 
                 new Dictionary<string, string>
                 {
@@ -67,7 +58,7 @@ public sealed class MetricsMiddleware
             // Record response size if available
             if (response.ContentLength.HasValue)
             {
-                _metricsService.RecordHistogram("http_response_size_bytes", 
+                metricsService.RecordHistogram("http_response_size_bytes", 
                     response.ContentLength.Value,
                     new Dictionary<string, string>
                     {
@@ -78,7 +69,7 @@ public sealed class MetricsMiddleware
 
             // Record concurrent requests gauge
             var activeRequests = GetActiveRequestCount(context);
-            _metricsService.RecordGauge("http_requests_active", activeRequests);
+            metricsService.RecordGauge("http_requests_active", activeRequests);
         }
     }
 

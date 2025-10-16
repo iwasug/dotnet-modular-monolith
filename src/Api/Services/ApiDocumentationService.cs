@@ -5,24 +5,18 @@ namespace ModularMonolith.Api.Services;
 /// <summary>
 /// Service for providing localized API documentation content
 /// </summary>
-public sealed class ApiDocumentationService : IApiDocumentationService
+public sealed class ApiDocumentationService(ILocalizationService localizationService) : IApiDocumentationService
 {
-    private readonly ILocalizationService _localizationService;
     private readonly string[] _supportedCultures = { "en-US", "es-ES", "fr-FR", "de-DE", "pt-BR", "it-IT", "ja-JP", "zh-CN", "id-ID" };
-
-    public ApiDocumentationService(ILocalizationService localizationService)
-    {
-        _localizationService = localizationService;
-    }
 
     public string GetApiTitle(string? culture = null)
     {
-        return _localizationService.GetString("ApiTitle", culture);
+        return localizationService.GetString("ApiTitle", culture);
     }
 
     public string GetApiDescription(string? culture = null)
     {
-        var description = _localizationService.GetString("ApiDescription", culture);
+        var description = localizationService.GetString("ApiDescription", culture);
 
         // Add additional features description based on culture
         var featuresDescription = culture?.StartsWith("es") == true
@@ -42,7 +36,7 @@ public sealed class ApiDocumentationService : IApiDocumentationService
 
     public string GetAuthenticationDescription(string? culture = null)
     {
-        var baseDescription = _localizationService.GetString("AuthenticationDescription", culture);
+        var baseDescription = localizationService.GetString("AuthenticationDescription", culture);
 
         var additionalInfo = culture?.StartsWith("es") == true
             ? "\n\n**Cómo obtener un token**:\n1. Llama al endpoint `/api/auth/login` con credenciales válidas\n2. Usa el `accessToken` devuelto en el header Authorization\n3. Actualiza el token usando `/api/auth/refresh` antes de que expire"
@@ -61,7 +55,7 @@ public sealed class ApiDocumentationService : IApiDocumentationService
 
     public string GetErrorMessage(string errorType, string? culture = null)
     {
-        return _localizationService.GetString($"{errorType}Error", culture);
+        return localizationService.GetString($"{errorType}Error", culture);
     }
 
     public string[] GetSupportedCultures()

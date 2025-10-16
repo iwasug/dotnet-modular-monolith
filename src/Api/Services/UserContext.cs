@@ -6,20 +6,13 @@ namespace ModularMonolith.Api.Services;
 /// <summary>
 /// Service for accessing current user context information from HTTP context
 /// </summary>
-internal sealed class UserContext : IUserContext
+internal sealed class UserContext(IHttpContextAccessor httpContextAccessor) : IUserContext
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public UserContext(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
-
     public UserId? CurrentUserId
     {
         get
         {
-            var context = _httpContextAccessor.HttpContext;
+            var context = httpContextAccessor.HttpContext;
             if (context?.Items.TryGetValue("UserId", out var userIdObj) == true && userIdObj is Guid userId)
             {
                 return UserId.From(userId);
@@ -40,7 +33,7 @@ internal sealed class UserContext : IUserContext
     {
         get
         {
-            var context = _httpContextAccessor.HttpContext;
+            var context = httpContextAccessor.HttpContext;
             if (context?.Items.TryGetValue("UserEmail", out var emailObj) == true && emailObj is string email)
             {
                 return email;
@@ -55,7 +48,7 @@ internal sealed class UserContext : IUserContext
     {
         get
         {
-            var context = _httpContextAccessor.HttpContext;
+            var context = httpContextAccessor.HttpContext;
             if (context?.Items.TryGetValue("UserName", out var nameObj) == true && nameObj is string name)
             {
                 return name;
@@ -70,7 +63,7 @@ internal sealed class UserContext : IUserContext
     {
         get
         {
-            var context = _httpContextAccessor.HttpContext;
+            var context = httpContextAccessor.HttpContext;
             if (context?.Items.TryGetValue("UserRoleIds", out var roleIdsObj) == true && roleIdsObj is List<Guid> roleIds)
             {
                 return roleIds.AsReadOnly();
@@ -91,7 +84,7 @@ internal sealed class UserContext : IUserContext
     {
         get
         {
-            var context = _httpContextAccessor.HttpContext;
+            var context = httpContextAccessor.HttpContext;
             if (context?.Items.TryGetValue("TokenId", out var tokenIdObj) == true && tokenIdObj is string tokenId)
             {
                 return tokenId;
@@ -106,7 +99,7 @@ internal sealed class UserContext : IUserContext
     {
         get
         {
-            var context = _httpContextAccessor.HttpContext;
+            var context = httpContextAccessor.HttpContext;
             return context?.User?.Identity?.IsAuthenticated == true;
         }
     }

@@ -5,19 +5,14 @@ namespace ModularMonolith.Authentication.Services;
 /// <summary>
 /// Implementation of localization service for the Authentication module
 /// </summary>
-public sealed class AuthLocalizationService : IAuthLocalizationService
+public sealed class AuthLocalizationService(IModularLocalizationService modularLocalizationService)
+    : IAuthLocalizationService
 {
-    private readonly IModularLocalizationService _modularLocalizationService;
     private const string ModuleName = "Authentication";
-
-    public AuthLocalizationService(IModularLocalizationService modularLocalizationService)
-    {
-        _modularLocalizationService = modularLocalizationService;
-    }
 
     public string GetString(string key, string? culture = null)
     {
-        return _modularLocalizationService.GetModuleString(ModuleName, key, culture);
+        return modularLocalizationService.GetModuleString(ModuleName, key, culture);
     }
 
     public string GetString(string key, params object[] args)

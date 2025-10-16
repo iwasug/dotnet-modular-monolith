@@ -82,18 +82,11 @@ public class ValueObjectTests
         money1.Should().NotBe(money3);
     }
 
-    private class Address : ValueObject
+    private class Address(string street, string city, string zipCode) : ValueObject
     {
-        public string Street { get; }
-        public string City { get; }
-        public string ZipCode { get; }
-
-        public Address(string street, string city, string zipCode)
-        {
-            Street = street;
-            City = city;
-            ZipCode = zipCode;
-        }
+        public string Street { get; } = street;
+        public string City { get; } = city;
+        public string ZipCode { get; } = zipCode;
 
         protected override IEnumerable<object?> GetEqualityComponents()
         {
@@ -103,16 +96,10 @@ public class ValueObjectTests
         }
     }
 
-    private class Money : ValueObject
+    private class Money(decimal amount, string? currency) : ValueObject
     {
-        public decimal Amount { get; }
-        public string? Currency { get; }
-
-        public Money(decimal amount, string? currency)
-        {
-            Amount = amount;
-            Currency = currency;
-        }
+        public decimal Amount { get; } = amount;
+        public string? Currency { get; } = currency;
 
         protected override IEnumerable<object?> GetEqualityComponents()
         {

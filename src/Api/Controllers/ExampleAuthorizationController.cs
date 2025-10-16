@@ -9,17 +9,11 @@ namespace ModularMonolith.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-internal sealed class ExampleAuthorizationController : ControllerBase
+internal sealed class ExampleAuthorizationController(
+    IUserContext userContext,
+    ILogger<ExampleAuthorizationController> logger)
+    : ControllerBase
 {
-    private readonly IUserContext _userContext;
-    private readonly ILogger<ExampleAuthorizationController> _logger;
-
-    public ExampleAuthorizationController(IUserContext userContext, ILogger<ExampleAuthorizationController> logger)
-    {
-        _userContext = userContext;
-        _logger = logger;
-    }
-
     /// <summary>
     /// Public endpoint - no authorization required
     /// </summary>
@@ -39,8 +33,8 @@ internal sealed class ExampleAuthorizationController : ControllerBase
         return Ok(new 
         { 
             Message = "This is authenticated data", 
-            UserId = _userContext.CurrentUserId?.Value,
-            UserEmail = _userContext.CurrentUserEmail,
+            UserId = userContext.CurrentUserId?.Value,
+            UserEmail = userContext.CurrentUserEmail,
             Timestamp = DateTime.UtcNow 
         });
     }
@@ -55,8 +49,8 @@ internal sealed class ExampleAuthorizationController : ControllerBase
         return Ok(new 
         { 
             Message = "This is admin-only data", 
-            UserId = _userContext.CurrentUserId?.Value,
-            UserRoles = _userContext.CurrentUserRoleIds,
+            UserId = userContext.CurrentUserId?.Value,
+            UserRoles = userContext.CurrentUserRoleIds,
             Timestamp = DateTime.UtcNow 
         });
     }
@@ -68,12 +62,12 @@ internal sealed class ExampleAuthorizationController : ControllerBase
     [RequirePermission("user", "write")]
     public IActionResult CreateUser([FromBody] object userData)
     {
-        _logger.LogInformation("User {UserId} is creating a new user", _userContext.CurrentUserId?.Value);
+        logger.LogInformation("User {UserId} is creating a new user", userContext.CurrentUserId?.Value);
         
         return Ok(new 
         { 
             Message = "User creation authorized", 
-            CreatedBy = _userContext.CurrentUserId?.Value,
+            CreatedBy = userContext.CurrentUserId?.Value,
             Timestamp = DateTime.UtcNow 
         });
     }
@@ -85,12 +79,12 @@ internal sealed class ExampleAuthorizationController : ControllerBase
     [RequirePermission("*", "*")]
     public IActionResult ResetSystem()
     {
-        _logger.LogWarning("System reset requested by user {UserId}", _userContext.CurrentUserId?.Value);
+        logger.LogWarning("System reset requested by user {UserId}", userContext.CurrentUserId?.Value);
         
         return Ok(new 
         { 
             Message = "System reset authorized (not actually performed in this example)", 
-            RequestedBy = _userContext.CurrentUserId?.Value,
+            RequestedBy = userContext.CurrentUserId?.Value,
             Timestamp = DateTime.UtcNow 
         });
     }
@@ -105,8 +99,8 @@ internal sealed class ExampleAuthorizationController : ControllerBase
         return Ok(new 
         { 
             Message = "This is moderation data", 
-            UserId = _userContext.CurrentUserId?.Value,
-            UserRoles = _userContext.CurrentUserRoleIds,
+            UserId = userContext.CurrentUserId?.Value,
+            UserRoles = userContext.CurrentUserRoleIds,
             Timestamp = DateTime.UtcNow 
         });
     }
@@ -118,19 +112,19 @@ internal sealed class ExampleAuthorizationController : ControllerBase
     [RequirePermission("user", "read", "self")]
     public IActionResult GetCurrentUser()
     {
-        if (!_userContext.IsAuthenticated)
+        if (!userContext.IsAuthenticated)
         {
             return Unauthorized();
         }
 
         return Ok(new 
         { 
-            UserId = _userContext.CurrentUserId?.Value,
-            Email = _userContext.CurrentUserEmail,
-            Name = _userContext.CurrentUserName,
-            RoleIds = _userContext.CurrentUserRoleIds,
-            TokenId = _userContext.CurrentTokenId,
-            IsAuthenticated = _userContext.IsAuthenticated,
+            UserId = userContext.CurrentUserId?.Value,
+            Email = userContext.CurrentUserEmail,
+            Name = userContext.CurrentUserName,
+            RoleIds = userContext.CurrentUserRoleIds,
+            TokenId = userContext.CurrentTokenId,
+            IsAuthenticated = userContext.IsAuthenticated,
             Timestamp = DateTime.UtcNow 
         });
     }

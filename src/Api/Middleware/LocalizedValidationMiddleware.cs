@@ -10,27 +10,16 @@ namespace ModularMonolith.Api.Middleware;
 /// <summary>
 /// Middleware to handle FluentValidation exceptions with localized error messages
 /// </summary>
-internal sealed class LocalizedValidationMiddleware
+internal sealed class LocalizedValidationMiddleware(
+    RequestDelegate next,
+    ILogger<LocalizedValidationMiddleware> logger,
+    ILocalizedErrorService localizedErrorService)
 {
-    private readonly RequestDelegate _next;
-    private readonly ILogger<LocalizedValidationMiddleware> _logger;
-    private readonly ILocalizedErrorService _localizedErrorService;
-
-    public LocalizedValidationMiddleware(
-        RequestDelegate next,
-        ILogger<LocalizedValidationMiddleware> logger,
-        ILocalizedErrorService localizedErrorService)
-    {
-        _next = next;
-        _logger = logger;
-        _localizedErrorService = localizedErrorService;
-    }
-
     public async Task InvokeAsync(HttpContext context)
     {
         try
         {
-            await _next(context);
+            await next(context);
         }
         catch (ValidationException validationException)
         {
@@ -43,7 +32,7 @@ internal sealed class LocalizedValidationMiddleware
         var correlationId = context.TraceIdentifier;
         var culture = context.GetCurrentCultureWithFallback();
 
-        _logger.LogWarning(
+        logger.LogWarning(
             "Validation failed for request {RequestMethod} {RequestPath} with {ErrorCount} errors",
             context.Request.Method,
             context.Request.Path,
@@ -57,7 +46,7 @@ internal sealed class LocalizedValidationMiddleware
                 g => g.Select(e => e.ErrorMessage).ToArray()
             );
 
-        var error = _localizedErrorService.CreateValidationError(
+        var error = localizedErrorService.CreateValidationError(
             "VALIDATION_FAILED", 
             "ValidationFailed", 
             culture);

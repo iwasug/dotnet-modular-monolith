@@ -5,17 +5,10 @@ namespace ModularMonolith.Api.Middleware;
 /// <summary>
 /// Middleware to add correlation IDs for request tracking
 /// </summary>
-public sealed class CorrelationIdMiddleware
+public sealed class CorrelationIdMiddleware(RequestDelegate next)
 {
     private const string CorrelationIdHeaderName = "X-Correlation-ID";
     private const string CorrelationIdLogPropertyName = "CorrelationId";
-    
-    private readonly RequestDelegate _next;
-
-    public CorrelationIdMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -28,7 +21,7 @@ public sealed class CorrelationIdMiddleware
         // Add correlation ID to Serilog context for structured logging
         using (LogContext.PushProperty(CorrelationIdLogPropertyName, correlationId))
         {
-            await _next(context);
+            await next(context);
         }
     }
 
